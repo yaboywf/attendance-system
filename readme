@@ -1,0 +1,8 @@
+to run:
+
+client: 
+    cd frontend
+    npm start
+
+server:
+    node server.js
