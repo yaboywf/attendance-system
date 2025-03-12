@@ -4,11 +4,11 @@ import axios from "axios";
 function LoginPage() {
     const [message, setMessage] = useState("");
 
-    // useEffect(() => {
-    //     axios.get("http://localhost:3001/api/hello")
-    //         .then(response => setMessage(response.data.message))
-    //         .catch(error => console.error("Error fetching data:", error));
-    // }, []);
+    useEffect(() => {
+        axios.get("http://localhost:3001/api/hello")
+            .then(response => setMessage(response.data.message))
+            .catch(error => console.error("Error fetching data:", error));
+    }, []);
 
     return (
         <div>
