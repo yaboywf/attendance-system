@@ -1,4 +1,4 @@
-name: Run React Tests
+name: Run React and Server Tests
 
 on: 
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  React Tests:
+  tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -27,18 +27,6 @@ jobs:
       - name: Run tests (frontend)
         run: npm test
         working-directory: ./frontend  # Specify the frontend folder
-
-  Server Tests:
-    runs-on: ubuntu-latest
-    needs: React Tests
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
 
       - name: Install dependencies (server)
         run: npm install
