@@ -11,6 +11,8 @@ function LoginPage() {
                 <input type="password" id="password" name="password" />
 
                 <button type="submit">Login</button>
+
+                <p>Forget Password? <a href="">Click here to reset</a></p>
             </form>
         </div>
     );
