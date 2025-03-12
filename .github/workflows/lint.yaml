@@ -1,11 +1,11 @@
-name: Run React Tests
+name: Run ESLint
 
 on: [push, pull_request]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    needs: test  # Linting runs after tests
+    needs: test
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -17,8 +17,8 @@ jobs:
 
       - name: Install dependencies (frontend)
         run: npm install
-        working-directory: ./frontend  # Specify the frontend folder
+        working-directory: ./frontend
 
       - name: Run ESLint (frontend)
         run: npm run lint
-        working-directory: ./frontend  # Specify the frontend folder
+        working-directory: ./frontend
