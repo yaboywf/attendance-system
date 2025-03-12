@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run Tests and Linting
 
 on: [push, pull_request]
 
@@ -19,3 +19,21 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: test  # This ensures linting happens after tests
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
