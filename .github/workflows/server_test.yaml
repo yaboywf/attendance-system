@@ -1,0 +1,21 @@
+name: Run Server Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies (server)
+        run: npm install
+
+      - name: Run tests (backend)
+        run: npm test
