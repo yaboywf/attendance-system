@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "AttendEase",
+  "name": "AttendEase - The Key to simplified attendance",
   "icons": [],
   "start_url": ".",
   "display": "standalone",
