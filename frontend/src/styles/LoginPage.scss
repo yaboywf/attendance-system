@@ -76,6 +76,18 @@
                 text-align: center;
                 cursor: pointer;
             }
+
+            .error {
+                display: none;
+                color: red;
+                font-size: 13px;
+
+                &::before {
+                    font: var(--fa-font-solid);
+                    content: "\f06a";
+                    margin-right: 10px;
+                }
+            }
         }
     }
 }

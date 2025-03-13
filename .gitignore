@@ -1,2 +1,4 @@
 frontend/build
 node_modules
+.env
+db_query.ps1

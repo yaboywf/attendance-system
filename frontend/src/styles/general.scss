@@ -57,3 +57,46 @@ footer {
         cursor: pointer;
     }
 }
+
+.error-stack {
+    position: fixed;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    .message {
+        background: red;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        opacity: 1;
+        animation: fadeInOut 3s ease-in-out forwards;
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
