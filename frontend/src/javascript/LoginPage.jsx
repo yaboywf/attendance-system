@@ -10,35 +10,39 @@ function LoginPage() {
         const id = Date.now();
         setErrors((prev) => [...prev, { id, message }]);
 
-        setTimeout(() => {
-            setErrors((prev) => prev.filter((error) => error.id !== id));
-        }, 3000);
+        if (process.env.NODE_ENV !== "test") {
+            setTimeout(() => {
+                setErrors((prev) => prev.filter((error) => error.id !== id));
+            }, 3000);   
+        }
     };
 
     const Login = (e) => {
         e.preventDefault();
 
-        const username = e.target.username.value;
-        const password = e.target.password.value;
+        const formData = new FormData(e.target);
+        const username = formData.get("username");
+        const password = formData.get("password");
 
-        if (!username) e.target.username.nextElementSibling.style.display = "block";
-        if (!password) e.target.password.nextElementSibling.style.display = "block";
-        if (!username || !password) return;
-
-        axios.post("http://127.0.0.1:3000/login", { username, password })
-        .then(res => {
-            if (res.data.status === "success") {
-                window.location.href = "/dashboard";
-            }
-        })
-        .catch(err => {
-            if (err.response?.data?.status === "fail" || err.response?.status === 401) {
-                addError("Incorrect username or password");
-            } else {
-                addError("Something went wrong");
-                console.error(err.response);
-            }
-        });
+        if (!username) document.querySelector("#username + .error").style.display = "block";
+        if (!password) document.querySelector("#password + .error").style.display = "block";
+        
+        if (username && password) {
+            axios.post("http://127.0.0.1:3000/api/authenticate", { username, password })
+            .then(res => {
+                if (res.data.status === "success") {
+                    window.location.href = "/dashboard";
+                }
+            })
+            .catch(err => {
+                if (err.response?.data?.status === "fail" || err.response?.status === 401) {
+                    addError("Incorrect username or password");
+                } else {
+                    addError("Something went wrong");
+                    console.error(err.response);
+                }
+            });
+        }
     }
 
     return (

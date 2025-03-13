@@ -50,10 +50,10 @@ app.get("/api/hello", (req, res) => {
 	res.json({ message: "Hello from server!" });
 });
 
-app.post("/login", (req, res, next) => {
+app.post("/api/authenticate", (req, res, next) => {
 	passport.authenticate("local", (err, user, info) => {
 		if (err) return next(err);
-		if (!user) return res.status(401).json({ status: "fail" ,error: info.message });
+		if (!user) return res.status(401).json({ status: "fail", error: info.message });
 
 		req.logIn(user, (err) => {
 			if (err) return next(err);
