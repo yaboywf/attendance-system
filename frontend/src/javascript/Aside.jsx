@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from 'prop-types'
 
-function Aside() {
+function Aside({ user }) {
     const [page, setPage] = useState("home");
 
     useEffect(() => {
@@ -17,6 +18,11 @@ function Aside() {
             setPage("profile");
         }
     }, []);
+
+    const logout = () => {
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = "/"
+    }
 
     const goToPage = (page) => {
         window.location.href = page;
@@ -51,7 +57,7 @@ function Aside() {
                         <i className="fa-solid fa-user"></i>
                         Profile
                     </button>
-                    <button onClick={() => goToPage("/logout") }>
+                    <button onClick={() => logout() }>
                         <i className="fa-solid fa-lock"></i>
                         Logout
                     </button>
@@ -60,10 +66,14 @@ function Aside() {
             
             <section>
                 <img src="attendance-logo.webp" alt="User Image" />
-                <p>Username</p>
+                <p>{user?.user?.username || "User"}</p>
             </section>
         </aside>
     )
+}
+
+Aside.PropTypes = {
+    user: PropTypes.object.isRequired
 }
 
 export { Aside }

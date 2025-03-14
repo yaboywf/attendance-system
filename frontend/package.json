@@ -19,7 +19,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.js src/**/*.jsx"
   },
@@ -52,7 +52,11 @@
   },
   "jest": {
     "transformIgnorePatterns": [
-      "/node_modules/(?!axios)/"
-    ]
+      "/node_modules/(?!axios|react-router-dom)/"
+    ],
+    "moduleNameMapper": {
+      "^components/(.*)$": "<rootDir>/src/components/$1",
+      "^tests/(.*)$": "<rootDir>/src/tests/$1"
+    }
   }
 }

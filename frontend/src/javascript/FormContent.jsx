@@ -1,10 +1,11 @@
 import axios from "axios";
 import React, { useState, useRef } from "react";
-import PropTypes from "prop-types";
+import { useError } from "./ErrorContext";
 
-function MC({ addError }) {
+function FormContent({ username, formType }) {
     const [file, setFile] = useState(null);
     const fileInputRef = useRef(null);
+    const { addError } = useError();
 
     const getLocalDatetime = () => {
         const now = new Date();
@@ -39,11 +40,12 @@ function MC({ addError }) {
 
         const formData = new FormData(e.target);
 
+        if (!formData.get("reason")) return ("Please enter a reason");
         if (!file) return addError("Please upload a file");
 
-        axios.post("http://127.0.0.1:3000/api/mc", formData, {
+        axios.post("http://127.0.0.1:3000/api/loa", formData, {
             headers: {
-                "Content-Type": "multipart/form-data", // Ensure proper file handling
+                "Content-Type": "multipart/form-data",
             },
         })
         .then(res => {
@@ -52,21 +54,26 @@ function MC({ addError }) {
             }
         })
         .catch(err => {
-            addError("Something went wrong");
-            console.error(err.response);
+            addError("Something went wrong when submitting");
+            console.error(err);
         });
     };
 
     return (
         <form method="post" encType="multipart/form-data" onSubmit={(e) => submit(e)} noValidate>
             <label htmlFor="name">Name:</label>
-            <input type="text" name="name" id="name" disabled required defaultValue="John Doe" placeholder="Enter name" autoComplete="off" />
+            <input type="text" name="name" id="name" disabled required defaultValue={username} placeholder="Enter name" autoComplete="off" />
 
             <label htmlFor="start_date">Start Date:</label>
             <input type="datetime-local" name="start_date" id="start_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()} placeholder="Enter start date" />
 
             <label htmlFor="end_date">End Date:</label>
             <input type="datetime-local" name="end_date" id="end_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()} placeholder="Enter end date" />
+
+            {formType === "LOA" && <>
+                <label htmlFor="reason">Reason:</label>
+                <input type="text" name="reason" id="reason" required placeholder="Enter reason" />
+            </>}
 
             <p>Upload Document:</p>
             <label htmlFor="upload" onDragOver={handleDragOver} onDrop={handleDrop} style={{ display: file ? "none" : "flex" }}>Drag and drop or click to upload</label>
@@ -83,8 +90,4 @@ function MC({ addError }) {
     )
 }
 
-MC.propTypes = {
-    addError: PropTypes.func.isRequired,
-};
-
-export default MC
+export default FormContent
