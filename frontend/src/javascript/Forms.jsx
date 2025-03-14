@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import LOA from "./LOA";
+import MC from "./MC";
 import { ErrorStack } from "./Errors";
 
 function FormsPage() {
@@ -37,7 +38,7 @@ function FormsPage() {
 
             <div className="forms-container">
                 {formType === "LOA" && <LOA addError={addError} />}
-                {/* {formType === "LOA" && } */}
+                {formType === "MC" && <MC addError={addError} />}
             </div>
         </div>
     )
