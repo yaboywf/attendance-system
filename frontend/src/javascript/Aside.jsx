@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types'
-import axios from "axios";
 
 function Aside({ user }) {
     const [page, setPage] = useState("home");
@@ -21,15 +20,8 @@ function Aside({ user }) {
     }, []);
 
     const logout = () => {
-        axios.get("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
-        .then(response => {
-            if (response.data.success) {
-                window.location.href = "/";
-            }
-        })
-        .catch(error => {
-            console.error(error);
-        })
+        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = "/"
     }
 
     const goToPage = (page) => {

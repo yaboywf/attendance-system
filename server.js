@@ -89,23 +89,6 @@ app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	res.json({ status: "success", user: req.user});
 });
 
-app.get("/api/logout", isAuthenticated, (req, res) => {
-	req.logout((err) => {
-        if (err) {
-            return res.status(500).json({ status: "fail", message: "Logout failed" });
-        }
-
-        req.session.destroy((err) => {
-            if (err) {
-                return res.status(500).json({ status: "fail", message: "Session destruction failed" });
-            }
-            
-			res.clearCookie("connect.sid");
-			res.json({ success: true })
-        });
-    });	
-})
-
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {
