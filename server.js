@@ -67,12 +67,8 @@ function isAuthenticated(req, res, next) {
 	res.json({ status: "fail" })
 }
 
-app.get("/dashboard", isAuthenticated, (req, res) => {
-	res.send(`Welcome ${req.user.username}, you are logged in!`);
-});
-
-app.get("/login-fail", (req, res) => {
-	res.send("Login failed. Please check your credentials.");
+app.get("/api/get_credentials", isAuthenticated, (req, res) => {
+	res.json({ status: "success", user: req.user});
 });
 
 
