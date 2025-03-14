@@ -7,14 +7,20 @@ function Aside() {
         const path = window.location.pathname;
         if (path === "/") {
             setPage("home");
-        } else if (path === "/submit") {
+        } else if (path === "/forms") {
             setPage("submit");
-        } else if (path === "/mark") {
-            setPage("mark");
+        } else if (path === "/attendance") {
+            setPage("attendance");
         } else if (path === "/help") {
             setPage("help");
+        } else if (path === "/profile") {
+            setPage("profile");
         }
     }, []);
+
+    const goToPage = (page) => {
+        window.location.href = page;
+    }
 
     return (
         <aside>
@@ -25,27 +31,27 @@ function Aside() {
                 </div>
                 
                 <div>
-                    <button data-active={page === "home"}>
+                    <button data-active={page === "home"} onClick={() => goToPage("/") }>
                         <i className="fa-solid fa-house"></i>
                         Home
                     </button>
-                    <button data-active={page === "submit"}>
+                    <button data-active={page === "submit"} onClick={() => goToPage("/forms") }>
                         <i className="fa-solid fa-file"></i>
                         Submit MC / LOA
                     </button>
-                    <button data-active={page === "mark"}>
+                    <button data-active={page === "attendance"} onClick={() => goToPage("/attendance") }>
                         <i className="fa-solid fa-check"></i>
                         Mark Attendance
                     </button>
-                    <button data-active={page === "help"}>
+                    <button data-active={page === "help"} onClick={() => goToPage("/help") }>
                         <i className="fa-solid fa-question"></i>
                         Help
                     </button>
-                    <button>
+                    <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>
                         Profile
                     </button>
-                    <button>
+                    <button onClick={() => goToPage("/logout") }>
                         <i className="fa-solid fa-lock"></i>
                         Logout
                     </button>
