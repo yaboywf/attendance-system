@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState, useRef } from "react";
 import PropTypes from "prop-types";
 
-function LOA({ addError }) {
+function MC({ addError }) {
     const [file, setFile] = useState(null);
     const fileInputRef = useRef(null);
 
@@ -39,10 +39,9 @@ function LOA({ addError }) {
 
         const formData = new FormData(e.target);
 
-        if (!formData.get("reason")) return addError("Please enter a reason");
         if (!file) return addError("Please upload a file");
 
-        axios.post("http://127.0.0.1:3000/api/loa", formData, {
+        axios.post("http://127.0.0.1:3000/api/mc", formData, {
             headers: {
                 "Content-Type": "multipart/form-data", // Ensure proper file handling
             },
@@ -69,9 +68,6 @@ function LOA({ addError }) {
             <label htmlFor="end_date">End Date:</label>
             <input type="datetime-local" name="end_date" id="end_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()} placeholder="Enter end date" />
 
-            <label htmlFor="reason">Reason:</label>
-            <input type="text" name="reason" id="reason" required placeholder="Enter reason" />
-
             <p>Upload Document:</p>
             <label htmlFor="upload" onDragOver={handleDragOver} onDrop={handleDrop} style={{ display: file ? "none" : "flex" }}>Drag and drop or click to upload</label>
             <input type="file" name="upload" id="upload" required accept=".pdf, .jpg, .webp, .png, .jpeg, .doc, .docx" ref={fileInputRef} onChange={handleFileChange} />
@@ -87,8 +83,8 @@ function LOA({ addError }) {
     )
 }
 
-LOA.propTypes = {
+MC.propTypes = {
     addError: PropTypes.func.isRequired,
 };
 
-export default LOA
+export default MC
