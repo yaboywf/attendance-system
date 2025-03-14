@@ -1,0 +1,125 @@
+.forms {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    .toggle-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+
+        label {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: 1px solid black;
+            background: transparent;
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 200px;
+        }
+
+        input[type='radio']:checked + label {
+            background: black;
+            color: white;
+        }
+
+        input {
+            display: none;
+        }
+    }
+
+    .forms-container {
+        display: flex;
+        margin-top: 20px;
+
+        form {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px 10px;
+        }
+
+        input[type='text'], input[type='datetime-local'] {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 0px;
+            border-bottom: 1px solid black;
+            outline: none;
+            background: none;
+        }
+
+        input:disabled {
+            cursor: not-allowed;
+        }
+
+        input[type='file'] {
+            display: none;
+        }
+
+        p {
+            grid-column: span 2;
+        }
+
+        label[for='upload'] {
+            grid-column: span 2;
+            padding: 20px;
+            border: 1px dotted black;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: black;
+            min-height: 200px;
+        }
+
+        form > div {
+            grid-column: span 2;
+            display: flex;
+            border: 1px solid black;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: flex;
+
+            p {
+                width: 100%;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+
+            button {
+                margin-left: auto;
+                cursor: pointer;
+                width: 30px;
+                background: transparent;
+                outline: none;
+                border: none;
+                color: black;
+                font-size: 16px;
+            }
+        }
+
+        button[type='submit'] {
+            width: max-content;
+            grid-column: span 2;
+            margin-left: auto;
+            padding: 5px 20px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            background: black;
+            color: white;
+            cursor: pointer;
+        }
+    }
+}

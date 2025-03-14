@@ -37,8 +37,6 @@ header {
 
 footer {
     display: flex;
-    background: black;
-    color: white;
     padding: 20px;
     align-items: center;
     justify-content: space-between;
@@ -49,7 +47,6 @@ footer {
     }
 
     button {
-        color: white;
         background: transparent;
         outline: none;
         text-align: center;
