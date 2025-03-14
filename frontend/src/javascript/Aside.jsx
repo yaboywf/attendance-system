@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from 'prop-types'
+import axios from "axios";
 
-function Aside() {
+function Aside({ user }) {
     const [page, setPage] = useState("home");
 
     useEffect(() => {
@@ -17,6 +19,18 @@ function Aside() {
             setPage("profile");
         }
     }, []);
+
+    const logout = () => {
+        axios.get("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
+        .then(response => {
+            if (response.data.success) {
+                window.location.href = "/";
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        })
+    }
 
     const goToPage = (page) => {
         window.location.href = page;
@@ -51,7 +65,7 @@ function Aside() {
                         <i className="fa-solid fa-user"></i>
                         Profile
                     </button>
-                    <button onClick={() => goToPage("/logout") }>
+                    <button onClick={() => logout() }>
                         <i className="fa-solid fa-lock"></i>
                         Logout
                     </button>
@@ -60,10 +74,14 @@ function Aside() {
             
             <section>
                 <img src="attendance-logo.webp" alt="User Image" />
-                <p>Username</p>
+                <p>{user?.user?.username || "User"}</p>
             </section>
         </aside>
     )
+}
+
+Aside.PropTypes = {
+    user: PropTypes.object.isRequired
 }
 
 export { Aside }

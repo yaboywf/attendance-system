@@ -12,13 +12,23 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://127.0.0.1:3001',
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 
 app.use(
 	session({
 		secret: "attendEase",
 		resave: false,
 		saveUninitialized: false,
+		cookie: {
+            httpOnly: true,
+            secure: false,
+            maxAge: 1000 * 60 * 60 * 24
+        }
 	})
 );
 app.use(passport.initialize());
@@ -40,11 +50,18 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-	const user = Object.values(db("SELECT * FROM USERS")).find((u) => u.id === id);
-	done(null, user);
+passport.deserializeUser(async (id, done) => {
+	try {
+        const user = await db("SELECT * FROM USERS WHERE id = ?", [id]);
+        if (user && user.length > 0) {
+            done(null, user[0]);
+        } else {
+            done(new Error("User not found"));
+        }
+    } catch (err) {
+        done(err);
+    }
 });
-
 
 app.get("/api/hello", (req, res) => {
 	res.json({ message: "Hello from server!" });
@@ -57,6 +74,7 @@ app.post("/api/authenticate", (req, res, next) => {
 
 		req.logIn(user, (err) => {
 			if (err) return next(err);
+
 			res.json({ status: "success", user: user });
 		});
 	})(req, res, next);
@@ -64,13 +82,29 @@ app.post("/api/authenticate", (req, res, next) => {
 
 function isAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) return next();
-	res.json({ status: "fail" })
+	res.status(401).json({ status: "fail" })
 }
 
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	res.json({ status: "success", user: req.user});
 });
 
+app.get("/api/logout", isAuthenticated, (req, res) => {
+	req.logout((err) => {
+        if (err) {
+            return res.status(500).json({ status: "fail", message: "Logout failed" });
+        }
+
+        req.session.destroy((err) => {
+            if (err) {
+                return res.status(500).json({ status: "fail", message: "Session destruction failed" });
+            }
+            
+			res.clearCookie("connect.sid");
+			res.json({ success: true })
+        });
+    });	
+})
 
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;

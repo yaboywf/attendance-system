@@ -1,31 +1,17 @@
 import React, { useState } from "react";
-import LOA from "./LOA";
-import MC from "./MC";
-import { ErrorStack } from "./Errors";
+import FormContent from "./FormContent";
+import { useOutletContext } from 'react-router-dom';
 
 function FormsPage() {
-    const [errors, setErrors] = useState([]);
+    const { user } = useOutletContext();
     const [formType, setFormType] = useState("MC");
 
     const handleFormTypeChange = (e) => {
         setFormType(e.target.value);
     }
 
-    const addError = (message) => {
-        const id = Date.now();
-        setErrors((prev) => [...prev, { id, message }]); 
-
-        if (process.env.NODE_ENV !== "test") {
-            setTimeout(() => {
-                setErrors((prev) => prev.filter((error) => error.id !== id));
-            }, 3000);   
-        }
-    };
-
     return (
         <div className="forms">
-            <ErrorStack errors={errors} />
-
             <h1>Submit MC / LOA</h1>
 
             <div className="toggle-buttons">
@@ -37,8 +23,7 @@ function FormsPage() {
             </div>
 
             <div className="forms-container">
-                {formType === "LOA" && <LOA addError={addError} />}
-                {formType === "MC" && <MC addError={addError} />}
+                <FormContent username={user?.username} formType={formType} />
             </div>
         </div>
     )
