@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from 'react-router-dom';
 import { useError } from "./ErrorContext";
+import axios from "axios";
 
 function AttendanceMarking() {
     const { user } = useOutletContext();
     const [location, setLocation] = useState(null);
     const [ip, setIp] = useState(null);
     const [time, setTime] = useState(new Date().toLocaleTimeString());
-    const [face, setFace] = useState(null);
+    const [face,] = useState(null);
     const { addError } = useError();
     const [criterias, setCriterias] = useState({ ip: false, time: false, location: false, face: false });
 
