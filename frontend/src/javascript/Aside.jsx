@@ -6,7 +6,7 @@ function Aside({ user }) {
 
     useEffect(() => {
         const path = window.location.pathname;
-        if (path === "/") {
+        if (path === "/dashboard") {
             setPage("home");
         } else if (path === "/forms") {
             setPage("submit");
@@ -37,7 +37,7 @@ function Aside({ user }) {
                 </div>
                 
                 <div>
-                    <button data-active={page === "home"} onClick={() => goToPage("/") }>
+                    <button data-active={page === "home"} onClick={() => goToPage("/dashboard") }>
                         <i className="fa-solid fa-house"></i>
                         Home
                     </button>
