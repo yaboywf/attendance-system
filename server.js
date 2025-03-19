@@ -56,7 +56,7 @@ function createBackup() {
 
 cron.schedule('0 0 * * 1', () => {
     console.log("Starting weekly backup...");
-    createBackup();  // Call the backup function
+    createBackup();
 });
 
 passport.use(
@@ -113,6 +113,50 @@ function isAuthenticated(req, res, next) {
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	res.json({ status: "success", user: req.user});
 });
+
+app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
+	if (process.env.CRITERIA_IP === req.body.ip) {
+		res.json({ status: "success" });
+	}
+
+	res.json({ status: "fail" });
+})
+
+app.post("/api/mark_attendance/time", isAuthenticated, (req, res) => {
+	const { time } = req.body;
+	const currentTime = new Date(time);
+  	const currentHour = currentTime.getHours();
+
+	if (currentHour >= parseInt(process.env.CRITERIA_START_TIME) && currentHour < parseInt(process.env.CRITERIA_END_TIME)) {
+		res.json({ status: "success" });
+	}
+
+	res.json({ status: "fail" });
+})
+
+function checkLocation(lat1, lon1, lat2, lon2) {
+	const R = 6371;
+	const dLat = (lat2 - lat1) * Math.PI / 180;
+	const dLon = (lon2 - lon1) * Math.PI / 180;
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+		Math.sin(dLon / 2) * Math.sin(dLon / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	const distance = R * c;
+	return distance;
+}
+
+app.post("/api/mark_attendance/location", isAuthenticated, (req, res) => {
+	const { latitude, longitude } = req.body;
+	if (latitude && longitude) {
+		const distance = checkLocation(latitude, longitude, parseFloat(process.env.CRITERIA_LATITUDE), parseFloat(process.env.CRITERIA_LONGITUDE)) <= parseFloat(process.env.CRITERIA_RADIUS)		
+
+		if (distance) res.json({ status: "success" });
+	}
+
+	res.json({ status: "fail" });
+})
 
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
