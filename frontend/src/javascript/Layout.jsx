@@ -19,10 +19,12 @@ function Layout() {
             }
         })
         .catch((err) => {
-            if ((err.response?.data?.status == "fail" || err.response.status == 401) && window.location.pathname !== "/") {
+            if ((err.response?.data?.status == "fail" || err.response?.status == 401) && window.location.pathname !== "/") {
                 window.location.href = "/";
             }
         });
+
+        setheaderType("member");
     }, [])
     
     return (

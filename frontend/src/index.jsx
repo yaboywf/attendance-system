@@ -6,6 +6,7 @@ import Layout from './javascript/Layout'
 import LoginPage from './javascript/LoginPage';
 import DashboardPage from './javascript/Dashboard';
 import FormsPage from './javascript/Forms';
+import AttendanceMarking from './javascript/AttendanceMarking';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -13,6 +14,7 @@ import './styles/Aside.scss'
 import './styles/LoginPage.scss'
 import './styles/DashboardPage.scss'
 import './styles/Forms.scss'
+import './styles/Attendance.scss'
 
 const container = document.body;
 const root = createRoot(container);
@@ -25,6 +27,7 @@ root.render(
                     <Route path="/" element={<LoginPage />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/forms" element={<FormsPage />} />
+                    <Route path="/attendance" element={<AttendanceMarking />} />
                 </Route>
             </Routes>
         </Router>

@@ -7,6 +7,9 @@ const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 const db = require("./database");
 const { type } = require("os");
+const fs = require("fs");
+const cron = require('node-cron');
+require("dotenv").config();
 
 const app = express();
 
@@ -34,6 +37,28 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+const dbConfig = {
+    database: path.join(__dirname, 'DATABASE.FDB'),
+    backupDir: path.join(__dirname, 'backups'),
+};
+
+function createBackup() {
+    const backupFile = path.join(dbConfig.backupDir, `database_backup_${new Date().toISOString().slice(0, 10)}.FDB`);
+    
+    fs.copyFile(dbConfig.database, backupFile, (err) => {
+        if (err) {
+            console.error("Error during backup:", err);
+        } else {
+            console.log(`Backup successful: ${backupFile}`);
+        }
+    });
+}
+
+cron.schedule('0 0 * * 1', () => {
+    console.log("Starting weekly backup...");
+    createBackup();  // Call the backup function
+});
+
 passport.use(
 	new LocalStrategy(async (username, password, done) => {
 		const users = await db("SELECT * FROM USERS")
@@ -43,7 +68,7 @@ passport.use(
 		const user = users.find(user => user.username === username);
 
 		if (!user) return done(null, false, { message: "User not found" });
-		if (user.password !== password) return done(null, false, { message: "Incorrect password" });
+		if (bcrypt.compareSync(password, user.password)) return done(null, false, { message: "Incorrect password" });
 
 		return done(null, user);
 	})
