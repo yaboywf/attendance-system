@@ -55,7 +55,7 @@ function Aside({ user }) {
                     </button>
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>
-                        Profile
+                        My Profile
                     </button>
                     <button onClick={() => logout() }>
                         <i className="fa-solid fa-lock"></i>

@@ -34,6 +34,7 @@ root.render(
                     <Route path="/attendance" element={<AttendanceMarking />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/help" element={<HelpPage />} />
+                    <Route path="/terms" element={<HelpPage />} />
                 </Route>
             </Routes>
         </Router>

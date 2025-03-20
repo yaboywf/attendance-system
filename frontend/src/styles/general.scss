@@ -18,7 +18,10 @@ body {
 main {
     flex: 1;
     display: flex;
-    max-height: 100vh;
+}
+
+main:not(:has(.login-page)) {
+    min-height: 100vh;
 }
 
 header {
