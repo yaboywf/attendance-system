@@ -9,6 +9,7 @@ const db = require("./database");
 const { type } = require("os");
 const fs = require("fs");
 const cron = require('node-cron');
+const { encrypt, decrypt, getKey } = require("./encryption");
 require("dotenv").config();
 
 const app = express();
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(cors({
-    origin: 'http://127.0.0.1:3001',
+    origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -48,14 +49,11 @@ function createBackup() {
     fs.copyFile(dbConfig.database, backupFile, (err) => {
         if (err) {
             console.error("Error during backup:", err);
-        } else {
-            console.log(`Backup successful: ${backupFile}`);
         }
     });
 }
 
 cron.schedule('0 0 * * 1', () => {
-    console.log("Starting weekly backup...");
     createBackup();
 });
 
@@ -68,7 +66,7 @@ passport.use(
 		const user = users.find(user => user.username === username);
 
 		if (!user) return done(null, false, { message: "User not found" });
-		if (bcrypt.compareSync(password, user.password)) return done(null, false, { message: "Incorrect password" });
+		if (!bcrypt.compareSync(password, user.password)) return done(null, false, { message: "Incorrect password" });
 
 		return done(null, user);
 	})
@@ -93,13 +91,14 @@ app.get("/api/hello", (req, res) => {
 });
 
 app.post("/api/authenticate", (req, res, next) => {
+	const enteredPassword = req.body.password;
 	passport.authenticate("local", (err, user, info) => {
 		if (err) return next(err);
 		if (!user) return res.status(401).json({ status: "fail", error: info.message });
 
-		req.logIn(user, (err) => {
+		req.logIn(user, (err) => { 
 			if (err) return next(err);
-
+			req.session.enteredPassword = enteredPassword;
 			res.json({ status: "success", user: user });
 		});
 	})(req, res, next);
@@ -111,7 +110,9 @@ function isAuthenticated(req, res, next) {
 }
 
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
-	res.json({ status: "success", user: req.user});
+	const password = req.session.enteredPassword
+	const email = decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+	res.json({ status: "success", user: { username: req.user.username, email: email } });
 });
 
 app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
