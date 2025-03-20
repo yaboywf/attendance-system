@@ -24,7 +24,7 @@ function Layout() {
             }
         });
 
-        setheaderType("member");
+        // setheaderType("member");
     }, [])
     
     return (

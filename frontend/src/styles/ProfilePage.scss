@@ -19,6 +19,17 @@
             border: 1px solid black;
             border-radius: 50%;
             object-fit: contain;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            &:not([style*="background:"]) {
+                &::before {
+                    font: var(--fa-font-solid);
+                    content: "\f007";
+                    font-size: 50px;
+                }
+            }
         }
 
         div:last-of-type {

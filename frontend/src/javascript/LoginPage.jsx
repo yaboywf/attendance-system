@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useError } from "./ErrorContext";
 
 function LoginPage() {
@@ -17,19 +16,35 @@ function LoginPage() {
         if (!password) document.querySelector("#password + .error").style.display = "block";
         
         if (username && password) {
-            axios.post("http://127.0.0.1:3000/api/authenticate", { username, password }, { withCredentials: true })
-            .then(res => {
-                if (res.data.status === "success") {
+            fetch("http://127.0.0.1:3000/api/authenticate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "username": username,
+                    "password": password
+                }),
+                credentials: "include"
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => {
+                        console.log(error);
+                        throw new Error(error.message);
+                    })
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === "success") {
                     window.location.href = "/dashboard";
                 }
             })
             .catch(err => {
-                if (err.response?.data?.status === "fail" || err.response?.status === 401) {
-                    addError("Incorrect username or password");
-                } else {
-                    addError("Something went wrong");
-                    console.error(err.response);
-                }
+                addError("Incorrect username or password");
+                console.error(err);
             });
         }
     }
