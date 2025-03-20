@@ -4,7 +4,7 @@ const Footer = () => {
     return (
         <footer>
             <p>Made by Dylan Yeo</p>
-            <button>Terms of Use</button>
+            <button onClick={() => window.location.href = "/terms"}>Terms of Use</button>
         </footer>
     )
 }

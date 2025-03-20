@@ -5,6 +5,10 @@
     font-family: sans-serif;
 }
 
+ol, ul {
+    margin-left: 20px;
+}
+
 body {
     display: flex;
     flex-direction: column;
@@ -14,7 +18,10 @@ body {
 main {
     flex: 1;
     display: flex;
-    max-height: 100vh;
+}
+
+main:not(:has(.login-page)) {
+    min-height: 100vh;
 }
 
 header {
