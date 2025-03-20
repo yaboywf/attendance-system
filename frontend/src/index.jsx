@@ -8,6 +8,7 @@ import DashboardPage from './javascript/Dashboard';
 import FormsPage from './javascript/Forms';
 import AttendanceMarking from './javascript/AttendanceMarking';
 import ProfilePage from './javascript/ProfilePage';
+import HelpPage from './javascript/HelpPage';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -17,6 +18,7 @@ import './styles/DashboardPage.scss'
 import './styles/Forms.scss'
 import './styles/Attendance.scss'
 import './styles/ProfilePage.scss'
+import './styles/HelpPage.scss'
 
 const container = document.body;
 const root = createRoot(container);
@@ -31,6 +33,7 @@ root.render(
                     <Route path="/forms" element={<FormsPage />} />
                     <Route path="/attendance" element={<AttendanceMarking />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/help" element={<HelpPage />} />
                 </Route>
             </Routes>
         </Router>
