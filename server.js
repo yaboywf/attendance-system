@@ -11,6 +11,8 @@ const fs = require("fs");
 const cron = require('node-cron');
 const { encrypt, decrypt, getKey } = require("./encryption");
 require("dotenv").config();
+const { spawn } = require('child_process');
+const queryDatabase = require("./database");
 
 const app = express();
 
@@ -112,51 +114,96 @@ function isAuthenticated(req, res, next) {
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	const password = req.session.enteredPassword
 	const email = decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
-	res.json({ status: "success", user: { username: req.user.username, email: email } });
+	const accountType = decrypt(req.user.account_type, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex')) 
+	res.json({ status: "success", user: { username: req.user.username, email: email, account_type: accountType } });
 });
 
 app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
-	if (process.env.CRITERIA_IP === req.body.ip) {
-		res.json({ status: "success" });
+	const { ip } = req.body 
+	if (process.env.CRITERIA_IP === ip) {
+		req.session.ip = true 
+		return res.json({ status: "success" });
 	}
 
-	res.json({ status: "fail" });
+	req.session.ip = false
+	return res.json({ status: "fail" });
 })
 
 app.post("/api/mark_attendance/time", isAuthenticated, (req, res) => {
-	const { time } = req.body;
-	const currentTime = new Date(time);
+	const currentTime = new Date()
+	req.session.submitted_time = currentTime.toISOString();
   	const currentHour = currentTime.getHours();
 
 	if (currentHour >= parseInt(process.env.CRITERIA_START_TIME) && currentHour < parseInt(process.env.CRITERIA_END_TIME)) {
-		res.json({ status: "success" });
+		req.session.time = true
+		return res.json({ status: "success" });
 	}
 
-	res.json({ status: "fail" });
+	req.session.time = false
+	return res.json({ status: "fail" });  
 })
-
-function checkLocation(lat1, lon1, lat2, lon2) {
-	const R = 6371;
-	const dLat = (lat2 - lat1) * Math.PI / 180;
-	const dLon = (lon2 - lon1) * Math.PI / 180;
-	const a =
-		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-		Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-		Math.sin(dLon / 2) * Math.sin(dLon / 2);
-	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-	const distance = R * c;
-	return distance;
-}
 
 app.post("/api/mark_attendance/location", isAuthenticated, (req, res) => {
 	const { latitude, longitude } = req.body;
-	if (latitude && longitude) {
-		const distance = checkLocation(latitude, longitude, parseFloat(process.env.CRITERIA_LATITUDE), parseFloat(process.env.CRITERIA_LONGITUDE)) <= parseFloat(process.env.CRITERIA_RADIUS)		
+	const topLeftLat = parseFloat(process.env.CRITERIA_TOP_LEFT_LATITUDE);
+	const topLeftLon = parseFloat(process.env.CRITERIA_TOP_LEFT_LONGITUDE);
+	const bottomRightLat = parseFloat(process.env.CRITERIA_BOTTOM_RIGHT_LATITUDE);
+	const bottomRightLon = parseFloat(process.env.CRITERIA_BOTTOM_RIGHT_LONGITUDE);
 
-		if (distance) res.json({ status: "success" });
+	const isWithinBounds = (
+		latitude >= bottomRightLat && latitude <= topLeftLat &&	
+		longitude >= topLeftLon && longitude <= bottomRightLon
+	);
+
+	if (isWithinBounds) {
+		req.session.location = true
+		return res.json({ status: "success" }); 
 	}
 
-	res.json({ status: "fail" });
+	req.session.location = false
+	return res.json({ status: "fail" }); 
+})
+
+app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
+	const base64Data = req.body.image.replace(/^data:image\/jpeg;base64,/, '');
+    const imagePath = path.join(__dirname, `captured_${Date.now()}.jpg`);
+	fs.writeFileSync(imagePath, base64Data, 'base64');
+
+	const referenceImage = 'WIN_20250310_21_00_39_Pro.jpg';
+	const faceRecognition = spawn('python', ['face_recognition1.py', referenceImage, imagePath]);
+
+	faceRecognition.stdout.on('data', (data) => {
+		const result = data.toString().trim();
+		req.session.face = result === 'Match'
+		return res.json({ status: result === 'Match' ? "success" : "fail" });
+	});
+
+	req.session.face = false
+	faceRecognition.stderr.on('data', (data) => { 
+		console.error(`Python Error: ${data}`);
+        return res.status(500).json({ error: 'Face recognition failed' });
+	});
+})
+
+app.post("/api/mark_attendance/submit", (req, res) => {
+	if ([req.session.ip, req.session.time, req.session.face, req.session.location].every(Boolean)) {
+		const submittedTime = req.session.submitted_time
+		const processedTime = new Date().toISOString()
+
+		const encryptedAttendanceDateTime = encrypt(submittedTime, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+		const encryptedUpdatedDateTime = encrypt(processedTime, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+		const encryptedStatus = encrypt("1", getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+	
+		queryDatabase("SELECT COALESCE(MAX(id), 0) FROM attendance;")
+		.then(data => {
+			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?)", [data[0].coalesce, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null])
+			.then(() => {
+				res.json({ status: "success" })
+			})
+		})
+	} else {
+		return res.json({ status: "fail", message: "You have not completed all checks" })
+	}
 })
 
 if (process.env.NODE_ENV !== "test") {

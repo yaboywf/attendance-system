@@ -39,31 +39,22 @@ function getKey(password, salt) {
 	return crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');  // 100000 iterations, 32-byte key, 'sha256' hash
 }
 
-/*
-encrypt(
-	"john@example.com",
-	getKey(
-		"123",
-		"n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa
-	"),
-	Buffer.from(
+console.log(encrypt("student", getKey("123", "n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa"), Buffer.from(
 		"1fc055638a0e0fdddb1b881ea44f0226",
 		'hex'
 	)
-)
+))
 
-decrypt(
-	"301c78344fbf85caf325dc96dc45e5e9",
-	getKey(
-		"123",
-		"n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa"
-	),
-	Buffer.from(
-		"1fc055638a0e0fdddb1b881ea44f0226",
-		'hex'
-	)
-)
-
-*/
+// decrypt(
+// 	"301c78344fbf85caf325dc96dc45e5e9",
+// 	getKey(
+// 		"123",
+// 		"n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa"
+// 	),
+// 	Buffer.from(
+// 		"1fc055638a0e0fdddb1b881ea44f0226",
+// 		'hex'
+// 	)
+// )
 
 module.exports = { encrypt, decrypt, getKey, createIv }

@@ -16,6 +16,11 @@ function ProfilePage() {
         .catch(() => setError("Something went wrong when updating profile"));
     }
 
+    const capitalize = (string) => {
+        if (string === "") return;
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
     return (
         <div className="profile">
             <h1>My Profile</h1>
@@ -31,7 +36,7 @@ function ProfilePage() {
                     <p>{user?.email || "Email"}</p>
                     
                     <p>Account Type:</p>
-                    <p>{user?.account_type || "Student"}</p>
+                    <p>{capitalize(user?.account_type) || "Account Type"}</p>
                 </div>
             </section>
 
