@@ -13,6 +13,7 @@ const options = {
     WireCrypt: process.env.FIREBIRD_WIRECRYPT,
 };
 
+// Create a pool of 5 connections
 const pool = Firebird.pool(5, options);
 
 function queryDatabase(sql, params = []) {
@@ -20,10 +21,10 @@ function queryDatabase(sql, params = []) {
         pool.get((err, db) => {
             if (err) {
                 console.error("Firebird Connection Error:", err);
-                db.detach();
-                return reject(err);
+                return reject(err);  // Return here to avoid calling db.detach()
             }
 
+            // Query execution
             db.query(sql, params, (err, result) => {
                 if (err) {
                     console.error("❌ Query Error:", err);
@@ -31,20 +32,20 @@ function queryDatabase(sql, params = []) {
                     return reject(err);
                 }
 
+                // Handling update or delete queries
                 if (sql.toLowerCase().startsWith('update') || sql.toLowerCase().startsWith('delete')) {
                     console.log("Query executed successfully.");
                     db.detach();
                     return resolve({ rowsAffected: result });
                 }
 
-                // Case for select query with results
+                // Handling select queries
                 if (result && Array.isArray(result)) {
                     const formattedResult = result.map(row => {
                         return Object.fromEntries(
                             Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])
                         );
                     });
-
                     console.log("Query Result:", formattedResult);
                     db.detach();
                     return resolve(formattedResult);
@@ -55,20 +56,19 @@ function queryDatabase(sql, params = []) {
                 }
             });
         });
-    }).finally(() => {
-        pool.destroy();
     });
 }
 
-queryDatabase("select * from users;")
+queryDatabase("select * from attendance;")
 
 // queryDatabase(`
-//     CREATE TABLE users (
+//     CREATE TABLE attendance (
 //     id INTEGER NOT NULL PRIMARY KEY,
-//     username VARCHAR(255),
-//     password VARCHAR(255),
-//     email VARCHAR(255),
-//     account_type VARCHAR(255)
+//     user_id VARCHAR(255) NOT NULL,
+//     attendance_datetime VARCHAR(255) NOT NULL,
+//     updated_datetime VARCHAR(255) NOT NULL,
+//     status VARCHAR(255) NOT NULL,
+//     remarks VARCHAR(500)
 // );`)
 
 // queryDatabase(`
@@ -77,7 +77,9 @@ queryDatabase("select * from users;")
 //     FROM new_users;
 // `);
 
-// queryDatabase("ALTER TABLE users ADD iv VARCHAR(200);")
+// queryDatabase("DROP TABLE new_users;")
+
+// queryDatabase("ALTER TABLE users ADD iv VARCHAR(255);")
 
 // queryDatabase("UPDATE users SET iv = ? WHERE id = 0;", ["1fc055638a0e0fdddb1b881ea44f0226"])
 
