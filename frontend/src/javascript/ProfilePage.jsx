@@ -5,7 +5,7 @@ import axios from "axios";
 
 function ProfilePage() {
     const { user } = useOutletContext();
-    const { setError } = useError();
+    const { addError } = useError();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -13,7 +13,41 @@ function ProfilePage() {
         .then(resp => {
             if (resp.data.status === "success") window.location.reload()
         })
-        .catch(() => setError("Something went wrong when updating profile"));
+        .catch(() => addError("Something went wrong when updating profile"));
+    }
+
+    const handleSubmitEmail = (e) => {
+        e.preventDefault();
+        let submit = true;
+        console.log("email processing")
+
+        const email = e.target.form.email;
+        if (email.value === "") {
+            addError("Email cannot be empty")
+            submit = false
+            return;
+        }
+
+        if (!email.checkValidity()) {
+            addError("Email is invalid")
+            submit = false
+            return;
+        }
+
+        console.log("passed")
+
+        if (submit) {
+            axios.put("http://127.0.0.1:3000/api/update_email", { email: email.value }, { headers: { "Content-Type": "application/json" }, withCredentials: true })
+            .then(resp => {
+                if (resp.data.status === "success") {
+                    addError("Email Updated", "success")
+                }
+            })
+            .catch(err => {
+                addError("Something went wrong when trying to update your email")
+                console.error(err)
+            })
+        }
     }
 
     const capitalize = (string) => {
@@ -36,7 +70,7 @@ function ProfilePage() {
                     <p>{user?.email || "Email"}</p>
                     
                     <p>Account Type:</p>
-                    <p>{capitalize(user?.account_type) || "Account Type"}</p>
+                    <p>{capitalize(user?.account_type || "") || "Account Type"}</p>
                 </div>
             </section>
 
@@ -45,8 +79,12 @@ function ProfilePage() {
 
                 <h3>Email</h3>
                 <label htmlFor="email">Email:</label>
-                <input type="email" id="email" name="email" placeholder="Enter Email" autoComplete="email" defaultValue={user?.email || ""} />
+                <input type="email" id="email" name="email" placeholder="Enter Email" autoComplete="email" defaultValue={user?.email || ""} required />
 
+                <button type="submit" onClick={handleSubmitEmail}>Update Email</button>
+            </form>
+
+            <form>
                 <h3>Password</h3>
                 <label htmlFor="current-password">Current Password:</label>
                 <input type="password" id="current-password" name="current-password" placeholder="Enter Current Password" autoComplete="current-password" />
@@ -61,9 +99,9 @@ function ProfilePage() {
                     <li className="cross">Password must contain special characters</li>
                     <li className="check">Password must be at least 8 characters long</li>
                 </ul>
-            </form>
 
-            <button type="submit" onClick={handleSubmit}>Update Profile</button>
+                <button type="submit" onClick={handleSubmit}>Update Password</button>
+            </form>
         </div>
     );
 }

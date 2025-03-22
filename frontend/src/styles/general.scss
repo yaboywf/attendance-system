@@ -82,6 +82,10 @@ footer {
         opacity: 1;
         animation: fadeInOut 3s ease-in-out forwards;
     }
+
+    .success {
+        background: green !important;
+    }
 }
 
 @keyframes fadeInOut {

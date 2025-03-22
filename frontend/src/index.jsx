@@ -9,6 +9,7 @@ import FormsPage from './javascript/Forms';
 import AttendanceMarking from './javascript/AttendanceMarking';
 import ProfilePage from './javascript/ProfilePage';
 import HelpPage from './javascript/HelpPage';
+import ErrorStack from "./javascript/Errors";
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -26,6 +27,7 @@ const root = createRoot(container);
 root.render(
     <ErrorProvider>
         <Router>
+            <ErrorStack />
             <Routes>
                 <Route element={<Layout />}>
                     <Route path="/" element={<LoginPage />} />

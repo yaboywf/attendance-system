@@ -21,7 +21,7 @@ app.use(express.json());
 
 app.use(cors({
     origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
 
@@ -204,6 +204,21 @@ app.post("/api/mark_attendance/submit", (req, res) => {
 	} else {
 		return res.json({ status: "fail", message: "You have not completed all checks" })
 	}
+})
+
+app.put("/api/update_email", (req, res) => {
+	const newEmail = req.body.email;
+
+	if (newEmail === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
+
+	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+	queryDatabase("UPDATE users SET email = ? WHERE id = ?", [encryptedEmail, req.user.id])
+	.then(() => {
+		return res.json({ status: "success" })
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
 })
 
 if (process.env.NODE_ENV !== "test") {

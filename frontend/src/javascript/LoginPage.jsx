@@ -31,7 +31,7 @@ function LoginPage() {
                 if (!response.ok) {
                     return response.json().then(error => {
                         console.log(error);
-                        throw new Error(error.message);
+                        throw new Error(error.error);
                     })
                 }
 
