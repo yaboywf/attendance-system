@@ -529,6 +529,27 @@ app.put("/api/reset_password", (req, res) => {
 		.catch(err => {
 			return res.json({ status: "fail", message: err })
 		})
+	} else {
+		if (!bcrypt.compareSync(currentPassword, req.user.password)) return res.status(400).json({ status: "fail", message: "Incorrect password" })
+
+		queryDatabase("SELECT email FROM users WHERE id = ?;", [userId])
+		.then(result => {
+			const email = result[0].email
+			const decryptedEmail = decrypt(email, getKey(currentPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+			const hashedPassword = bcrypt.hashSync(newPassword)
+			const reEncryptedEmail = encrypt(decryptedEmail, getKey(newPassword, hashedPassword.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+
+			queryDatabase("UPDATE users SET password = ?, email = ? WHERE id = ?;", [hashedPassword, reEncryptedEmail, userId])
+			.then(() => {
+				return res.json({ status: "success" })
+			})
+			.catch(err => {
+				return res.json({ status: "fail", message: err })
+			})
+		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
 	}
 })
 
