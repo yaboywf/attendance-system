@@ -6,13 +6,13 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 const db = require("./database");
-const { type } = require("os");
 const fs = require("fs");
 const cron = require('node-cron');
 const { encrypt, decrypt, getKey, decryptImage } = require("./encryption");
 require("dotenv").config();
 const { spawn } = require('child_process');
 const queryDatabase = require("./database");
+const helmet = require('helmet');
 
 const app = express();
 
@@ -37,6 +37,63 @@ app.use(
         }
 	})
 );
+
+app.use(helmet());
+app.use(
+	helmet.referrerPolicy({
+		policy: 'no-referrer-when-downgrade',
+	})
+);
+
+app.use(
+	helmet.hsts({
+		maxAge: 31536000,
+		includeSubDomains: true,
+		preload: true,
+	})
+);
+
+app.use(
+	helmet.crossOriginOpenerPolicy({
+		policy: 'same-origin'
+	})
+);
+
+app.use(
+	helmet.noSniff()
+);
+  
+app.use(
+	helmet.frameguard({
+	  	action: 'sameorigin',
+	})
+);
+  
+app.use(
+	helmet.xssFilter()
+);
+
+app.use(
+	helmet.contentSecurityPolicy({
+		directives: {
+			defaultSrc: ["'self'"],
+			scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+			styleSrc: ["'self'", "'unsafe-inline'"],
+			imgSrc: ["'self'", "data:"],
+			connectSrc: ["'self'"],
+			fontSrc: ["'self'", "https://fonts.gstatic.com"],
+			objectSrc: ["'none'"],
+			mediaSrc: ["'self'"],
+			frameSrc: ["'none'"],
+			childSrc: ["'none'"],
+			formAction: ["'self'"], // Allow form submissions only to the same origin
+			frameAncestors: ["'none'"],
+			manifestSrc: ["'self'"],
+			upgradeInsecureRequests: [],
+		},
+	})
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -257,7 +314,6 @@ app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 
 					faceRecognition.stdout.on('data', (data) => {
 						const result = data.toString().trim();
-						console.log(result)
 						req.session.face = result === 'Match'
 						return res.json({ status: result === 'Match' ? "success" : "fail" });
 					});

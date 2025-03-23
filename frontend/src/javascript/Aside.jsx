@@ -8,6 +8,19 @@ function Aside({ user }) {
     const [page, setPage] = useState("home");
     const { addError } = useError()
     const navigate = useNavigate();
+    const [userImage, setUserImage] = useState(null)
+
+    useEffect(() => {
+        axios.get("http://127.0.0.1:3000/api/get_user_image", { withCredentials: true, responseType: 'blob' })
+        .then(resp => {
+            const imageUrl = URL.createObjectURL(resp.data);
+            setUserImage(imageUrl);
+        })
+        .catch(err => {
+            addError("Something went wrong when trying to fetch user's profile picture")
+            console.error(err)
+        })
+    }, [])
 
     useEffect(() => {
         const path = window.location.pathname;
@@ -78,7 +91,7 @@ function Aside({ user }) {
             </section>
             
             <section>
-                <img src="attendance-logo.webp" alt="User Image" />
+                <img src={userImage} alt="User Image" />
                 <p>{user?.user?.username || "User"}</p>
             </section>
         </aside>
