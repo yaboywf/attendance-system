@@ -9,10 +9,12 @@ const db = require("./database");
 const fs = require("fs");
 const cron = require('node-cron');
 const { encrypt, decrypt, getKey, decryptImage, createIv, encryptImage } = require("./encryption");
-require("dotenv").config();
 const { spawn } = require('child_process');
 const queryDatabase = require("./database");
 const helmet = require('helmet');
+const nodemailer = require('nodemailer');
+const { text } = require("stream/consumers");
+require("dotenv").config();
 
 const app = express();
 
@@ -102,6 +104,17 @@ app.use((req, res, next) => {
 	res.setHeader('Pragma', 'no-cache');
 	res.setHeader('Expires', '0');
 	next();
+});
+
+const transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: process.env.EMAIL_ADDRESS,
+		pass: process.env.EMAIL_PASSWORD
+	},
+	tls: {
+		rejectUnauthorized: false,
+	},
 });
 
 const dbConfig = {
@@ -403,6 +416,87 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	})
 	.catch(err => {
 		res.status(500).json({ status: "fail", message: err })
+	})
+})
+
+app.post("/api/forget_password", (req, res) => {
+	const email = req.body.email
+	if (!email || email === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
+
+	const resetId = createIv().toString('hex')
+
+	queryDatabase("SELECT hashed_email FROM users;")
+	.then(result => {
+		let requestedUser = null;
+		result.forEach(user => {
+			if (bcrypt.compareSync(email, user.hashed_email)) {
+				requestedUser = user.id;
+				queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
+				.then(() => {
+					const mailOptions = {
+						from: process.env.EMAIL_ADDRESS,
+						to: email,
+						subject: "AttendEase - Password Reset",
+						text: `
+Hello ${email},
+
+You have requested to reset your password for AttendEase. Please click the following link to reset your password:
+
+http://127.0.0.1:3001/forget_password/verify/${resetId}
+
+For security reasons, do not share this link with anyone else. This link will expire in 1 hour. 
+
+If you did not request to reset your password, please ignore this email.
+
+Kind regards,
+AttendEase
+						`
+					}
+			
+					transporter.sendMail(mailOptions, (error, info) => {
+						if (error) {
+							console.log('Error sending email:', error);
+						}
+			
+						return res.json({ status: "success" })
+					});
+				})
+				.catch(err => {
+					return res.json({ status: "fail", message: err })
+				})
+			}
+		})
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
+})
+
+app.post("/api/verify/:resetId", (req, res) => {
+	const resetId = req.params.resetId
+	if (!resetId || resetId === "") return res.status(400).json({ status: "fail", message: "Reset ID cannot be empty" })
+
+	queryDatabase("SELECT * FROM resets WHERE id = ?;", [resetId])
+	.then(result => {
+		if (result.length > 0) {
+			const user = result[0];
+			const expiry = new Date(user.expiry);
+			const now = new Date();
+
+			if (now > expiry) {
+				queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry < CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT);", [resetId])
+				.then(() => {
+					return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+				})
+				.catch(err => {
+					return res.status(400).json({ status: "fail", message: err })
+				})
+			}
+
+			return res.json({ status: "success" })
+		} else {
+			return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+		}
 	})
 })
 

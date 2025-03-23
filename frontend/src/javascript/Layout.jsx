@@ -23,7 +23,7 @@ function Layout() {
         })
         .catch(err => {
             if (err.response?.status == 401) {
-                if (window.location.pathname !== "/") {
+                if (window.location.pathname !== "/" && !window.location.pathname.includes("/forget_password/verify")) {
                     navigate("/");
                 }
             }
