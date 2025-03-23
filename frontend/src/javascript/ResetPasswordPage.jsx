@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useError } from "./ErrorContext";
-import { useNavigate } from "react-router-dom";
 
 function ResetPasswordPage() {
     const [verified, setVerified] = useState(false);
     const [error, setError] = useState(null);
     const [timer, setTimer] = useState(10);
     const { addError } = useError();
-    const navigate = useNavigate();
 
     useEffect(() => {
         const resetId = window.location.pathname.split("/")[3];
@@ -27,7 +25,7 @@ function ResetPasswordPage() {
                     setTimer((prevTimer) => {
                         if (prevTimer === 1) {
                             clearInterval(intervalId);
-                            navigate("/");
+                            window.location.href = "/";
                         }
                         return prevTimer - 1;
                     });
@@ -39,6 +37,19 @@ function ResetPasswordPage() {
         })
     }, [])
 
+    const changeVisibility = (e) => {
+        const input = e.target.previousElementSibling;
+        if (input.type === "password") {
+            input.type = "text";
+            e.target.classList.remove("fa-eye");
+            e.target.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            e.target.classList.remove("fa-eye-slash");
+            e.target.classList.add("fa-eye");
+        }
+    }
+
     if (!verified) {
         return (
             <div className="reset-password reset-password-page-fail">
@@ -48,7 +59,21 @@ function ResetPasswordPage() {
             </div>
         );
     } else {
-        return <div>ResetPasswordPage</div>;
+        return (
+            <div className="reset-password reset-password-page-success">
+                <form>
+                    <label htmlFor="new">New Password:</label>
+                    <input type="password" name="new" id="new" placeholder="Enter New Password" autoComplete="new-password" />
+                    <i className="fa-solid fa-eye" onClick={changeVisibility}></i>
+
+                    <label htmlFor="confirm">Confirm New Password:</label>
+                    <input type="password" name="confirm" id="confirm" placeholder="Confirm New Password" autoComplete="new-password" />
+                    <i className="fa-solid fa-eye" onClick={changeVisibility}></i>
+
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        );
     }
 }
 

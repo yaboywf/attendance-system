@@ -13,7 +13,7 @@ const { spawn } = require('child_process');
 const queryDatabase = require("./database");
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
-const { text } = require("stream/consumers");
+const sharp = require('sharp');
 require("dotenv").config();
 
 const app = express();
@@ -230,12 +230,18 @@ app.get("/api/get_user_image", isAuthenticated, (req, res) => {
 			e.on('end', function () {
 				let buffer = Buffer.concat(buffers);
 				try {
-					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 					const iv = Buffer.from(req.user.iv, 'hex')
 					const decryptedImageBuffer = decryptImage(buffer, key, iv);
 		
-					res.setHeader('Content-Type', 'image/jpeg');
-					res.send(decryptedImageBuffer);
+					sharp(decryptedImageBuffer).toFormat('webp').toBuffer()
+					.then(webpBuffer => {
+						res.setHeader('Content-Type', 'image/webp');
+						res.send(webpBuffer);
+					})
+					.catch(() => {
+						res.status(400).send('Invalid image format or error converting image');
+					});
 				} catch (decryptionError) {
 					console.error('Decryption failed:', decryptionError.message);
 				}
@@ -315,7 +321,7 @@ app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 			e.on('end', function () {
 				let buffer = Buffer.concat(buffers);
 				try {
-					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 					const iv = Buffer.from(req.user.iv, 'hex')
 					const decryptedImageBuffer = decryptImage(buffer, key, iv);
 					
@@ -376,7 +382,7 @@ app.put("/api/update_email", (req, res) => {
 	if (newEmail === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
 
 	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
-	queryDatabase("UPDATE users SET email = ? WHERE id = ?", [encryptedEmail, req.user.id])
+	queryDatabase("UPDATE users SET email = ? SET hashed_email = ? WHERE id = ?", [encryptedEmail, bcrypt.hashSync(newEmail), req.user.id])
 	.then(() => {
 		return res.json({ status: "success" })
 	})
@@ -394,7 +400,7 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	if (new Date(endDate) < new Date(startDate)) return res.status(422).json({ status: "fail", message: "End date cannot be earlier than start date"})
 	if (formType.toLowerCase() === "loa" && reason === "") return res.status(422).json({ status: "fail", message: "Reason is required but is empty" }) 
 
-	const base64Data = req.body.file.replace(/^data:image\/jpeg;base64,/, '');
+	const base64Data = req.body.file.replace(req.body.file.match(/^data:(image\/(jpeg|jpg|webp|png)|application\/pdf);base64,/)[0], '');
     const fileBuffer = Buffer.from(base64Data, 'base64');
 	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 	const encryptionIv = createIv()
@@ -453,7 +459,7 @@ AttendEase
 						`
 					}
 			
-					transporter.sendMail(mailOptions, (error, info) => {
+					transporter.sendMail(mailOptions, (error) => {
 						if (error) {
 							console.log('Error sending email:', error);
 						}
@@ -480,11 +486,11 @@ app.post("/api/verify/:resetId", (req, res) => {
 	.then(result => {
 		if (result.length > 0) {
 			const user = result[0];
-			const expiry = new Date(user.expiry);
-			const now = new Date();
+			const expiry = Number(user.expiry);
+			const now = Math.floor(new Date().getTime() / 1000);
 
 			if (now > expiry) {
-				queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry < CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT);", [resetId])
+				queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry > ?;", [resetId, now])
 				.then(() => {
 					return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
 				})
