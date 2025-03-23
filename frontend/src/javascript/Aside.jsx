@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types'
+import axios from "axios";
+import { useError } from "./ErrorContext";
+import { useNavigate } from "react-router-dom";
 
 function Aside({ user }) {
     const [page, setPage] = useState("home");
+    const { addError } = useError()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const path = window.location.pathname;
@@ -20,8 +25,16 @@ function Aside({ user }) {
     }, []);
 
     const logout = () => {
-        document.cookie = "connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        window.location.href = "/"
+        axios.put("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
+        .then(resp => {
+            if (resp.data.status === "success") {
+                navigate("/", { replace: true });
+            }
+        })
+        .catch(err => {
+            addError("Something went wrong when trying to logout")
+            console.error(err)
+        })
     }
 
     const goToPage = (page) => {
