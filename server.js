@@ -206,8 +206,8 @@ function isAuthenticated(req, res, next) {
 
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	const password = req.session.enteredPassword
-	const email = decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
-	const accountType = decrypt(req.user.account_type, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex')) 
+	const email = req.user.email === "" ? "" : decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+	const accountType = decrypt(req.user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 	res.json({ status: "success", user: { username: req.user.username, email: email, account_type: accountType } });
 });
 
@@ -382,7 +382,7 @@ app.put("/api/update_email", (req, res) => {
 	if (newEmail === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
 
 	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
-	queryDatabase("UPDATE users SET email = ? SET hashed_email = ? WHERE id = ?", [encryptedEmail, bcrypt.hashSync(newEmail), req.user.id])
+	queryDatabase("UPDATE users SET email = ?, hashed_email = ? WHERE id = ?", [encryptedEmail, bcrypt.hashSync(newEmail), req.user.id])
 	.then(() => {
 		return res.json({ status: "success" })
 	})
@@ -431,10 +431,11 @@ app.post("/api/forget_password", (req, res) => {
 
 	const resetId = createIv().toString('hex')
 
-	queryDatabase("SELECT hashed_email FROM users;")
+	queryDatabase("SELECT id, hashed_email FROM users;")
 	.then(result => {
 		let requestedUser = null;
 		result.forEach(user => {
+			console.log(email, user.hashed_email)
 			if (bcrypt.compareSync(email, user.hashed_email)) {
 				requestedUser = user.id;
 				queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
@@ -499,11 +500,36 @@ app.post("/api/verify/:resetId", (req, res) => {
 				})
 			}
 
-			return res.json({ status: "success" })
+			return res.json({ status: "success", user_id: user.user_id })
 		} else {
 			return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
 		}
 	})
+	.catch(() => {
+		return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+	})
+})
+
+app.put("/api/reset_password", (req, res) => {
+	const newPassword = req.body.password
+	const confirmPassword = req.body.confirm
+	console.log(req.body)
+	const userId = req.body.user_id || req.user.id
+	const currentPassword = req.session.enteredPassword || null
+
+	if (!newPassword || newPassword === "") return res.status(400).json({ status: "fail", message: "Password cannot be empty" })
+	if (!confirmPassword || confirmPassword === "") return res.status(400).json({ status: "fail", message: "Confirm Password cannot be empty" })
+	if (newPassword !== confirmPassword) return res.status(400).json({ status: "fail", message: "Passwords do not match" })
+
+	if (!currentPassword) {
+		queryDatabase("UPDATE users SET password = ?, email = '', hashed_email = '' WHERE id = ?;", [bcrypt.hashSync(newPassword), userId])
+		.then(() => {
+			return res.json({ status: "success" })
+		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
+	}
 })
 
 if (process.env.NODE_ENV !== "test") {
