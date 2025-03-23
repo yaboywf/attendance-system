@@ -43,8 +43,14 @@ function getKey(password, salt) {
 	return crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');  // 100000 iterations, 32-byte key, 'sha256' hash
 }
 
-function encryptImage(imagePath, key, iv) {
-	const imageBuffer = fs.readFileSync(imagePath);
+/**
+ * Encrypts an image from a stream.
+ * @param {Buffer} imageBuffer - Buffer from image file.
+ * @param {Buffer} key - The encryption key (32 bytes for AES-256).
+ * @param {Buffer} iv - The initialization vector (16 bytes for AES).
+ * @returns {ReadableStream} - A stream of encrypted data.
+ */
+function encryptImage(imageBuffer, key, iv) {
 	const cipher = crypto.createCipheriv('aes-256-cbc', key, iv); 
 	let encrypted = cipher.update(imageBuffer);
 	encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -65,4 +71,4 @@ function decryptImage(encryptedData, key, iv) {
     return decrypted;
 }
 
-module.exports = { encrypt, decrypt, getKey, createIv, decryptImage }
+module.exports = { encrypt, decrypt, getKey, createIv, encryptImage, decryptImage }

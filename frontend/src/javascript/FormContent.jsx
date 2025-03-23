@@ -37,26 +37,50 @@ function FormContent({ username, formType }) {
 
     const submit = (e) => {
         e.preventDefault();
-
         const formData = new FormData(e.target);
 
-        if (!formData.get("reason")) return ("Please enter a reason");
+        if (new Date(formData.get("end_date")) < new Date(formData.get("start_date"))) return addError("End date cannot be earlier than start date")
+        if (formData.get("reason") && formData.get("reason") === "") return addError("Please enter a reason");
+        if (formData.get("reason") && formData.get("reason").length > 350) return addError("Input too long. Maximum of 350 characters")
         if (!file) return addError("Please upload a file");
+        if (file) {
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.webp'];
+            const mimeTypes = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.pdf': 'application/pdf', '.webp': 'image/webp'};
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const expectedMimeType = mimeTypes[`.${fileExtension}`];
+            if (!allowedExtensions.includes(`.${fileExtension}`) || file.type !== expectedMimeType) return addError("File format not allowed")
+        }
 
-        axios.post("http://127.0.0.1:3000/api/loa", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        })
-        .then(res => {
-            if (res.data.status === "success") {
-                window.location.href = "/dashboard";
-            }
-        })
-        .catch(err => {
-            addError("Something went wrong when submitting");
-            console.error(err);
-        });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const fileBlob = reader.result;
+
+            axios.post("http://127.0.0.1:3000/api/forms", {
+                name: formData.get("name"),
+                form_type: formType,
+                start_date: formData.get("start_date"),
+                end_date: formData.get("end_date"),
+                reason: formData.get("reason"),
+                file: fileBlob,
+            }, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                withCredentials: true
+            })
+            .then(res => {
+                if (res.data.status === "success") {
+                    addError("Form have been submitted. Pending review.", "success")
+                    e.target.reset()
+                }
+            })
+            .catch(err => {
+                addError(`Something went wrong when submitting your ${formType}`);
+                console.error(err);
+            });
+        };
+
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -65,10 +89,10 @@ function FormContent({ username, formType }) {
             <input type="text" name="name" id="name" disabled required defaultValue={username} placeholder="Enter name" autoComplete="off" />
 
             <label htmlFor="start_date">Start Date:</label>
-            <input type="datetime-local" name="start_date" id="start_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()} placeholder="Enter start date" />
+            <input type="datetime-local" name="start_date" id="start_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()}/>
 
             <label htmlFor="end_date">End Date:</label>
-            <input type="datetime-local" name="end_date" id="end_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()} placeholder="Enter end date" />
+            <input type="datetime-local" name="end_date" id="end_date" required min={getLocalDatetime()} defaultValue={getLocalDatetime()}/>
 
             {formType === "LOA" && <>
                 <label htmlFor="reason">Reason:</label>
@@ -77,7 +101,7 @@ function FormContent({ username, formType }) {
 
             <p>Upload Document:</p>
             <label htmlFor="upload" onDragOver={handleDragOver} onDrop={handleDrop} style={{ display: file ? "none" : "flex" }}>Drag and drop or click to upload</label>
-            <input type="file" name="upload" id="upload" required accept=".pdf, .jpg, .webp, .png, .jpeg, .doc, .docx" ref={fileInputRef} onChange={handleFileChange} />
+            <input type="file" name="upload" id="upload" required accept=".pdf, .jpg, .webp, .png, .jpeg" ref={fileInputRef} onChange={handleFileChange} />
             <div style={{ display: file ? "flex" : "none" }}>
                 <p>{file ? file.name : null}</p>
                 <button aria-label="Delete file" onClick={() => setFile(null)}>
