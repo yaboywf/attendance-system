@@ -8,7 +8,7 @@ function ErrorStack() {
     return (
         <div className="error-stack">
             {errors && errors.map((error) => (
-                <div key={error.id} className="message">
+                <div key={error.id} className={`message ${error?.type || ""}`}>
                     {error.message}
                 </div>
             ))}
@@ -16,4 +16,4 @@ function ErrorStack() {
     );
 }
 
-export { ErrorStack };
+export default ErrorStack

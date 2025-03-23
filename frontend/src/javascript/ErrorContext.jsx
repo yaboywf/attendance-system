@@ -10,11 +10,11 @@ export const useError = () => {
 export const ErrorProvider = ({ children }) => {
     const [errors, setErrors] = useState([]);
 
-    const addError = (message) => {
+    const addError = (message, type = "error") => {
         const id = Date.now();
         setErrors((prev) => {
             if (!Array.isArray(prev)) return [];
-            return [...prev, { id, message }];
+            return [...prev, { id, message, type }];
         });
 
         if (process.env.NODE_ENV !== "test") {

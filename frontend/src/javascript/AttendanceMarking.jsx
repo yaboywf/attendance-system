@@ -133,7 +133,7 @@ function AttendanceMarking() {
                 if (resp.data.status === "success") {
                     console.log("attendance marked")
                     setShowReadyToSubmit(false)
-                    window.location.href = "/dashboard"
+                    addError("Attendance Marked", "success")
                 }
             })
             .catch(error => {

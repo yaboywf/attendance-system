@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { param } = require('./server');
+const fs = require('fs');
 
 function createIv() {
 	return crypto.randomBytes(16);
@@ -12,7 +12,6 @@ function createIv() {
 	* @param {Buffer} iv - The initialization vector (IV) used for decryption
 	* @returns {string} - The decrypted plaintext as a UTF-8 string.
 */
-
 function encrypt(text, key, iv) {
 	const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
 	let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -27,7 +26,6 @@ function encrypt(text, key, iv) {
 	* @param {Buffer} iv - The initialization vector (IV) used for decryption
 	* @returns {string} - The decrypted plaintext as a UTF-8 string.
 */
-
 function decrypt(encryptedData, key, iv) {
 	const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
 	let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
@@ -35,26 +33,36 @@ function decrypt(encryptedData, key, iv) {
 	return decrypted
 }
 
+/**
+ * Derive a key from the password and salt using PBKDF2
+ * @param {string} password - The password used to derive the key
+ * @param {string} salt - A salt value used for PBKDF2
+ * @returns {Buffer} - The derived 32-byte key
+ */
 function getKey(password, salt) {
 	return crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');  // 100000 iterations, 32-byte key, 'sha256' hash
 }
 
-console.log(encrypt("student", getKey("123", "n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa"), Buffer.from(
-		"1fc055638a0e0fdddb1b881ea44f0226",
-		'hex'
-	)
-))
+function encryptImage(imagePath, key, iv) {
+	const imageBuffer = fs.readFileSync(imagePath);
+	const cipher = crypto.createCipheriv('aes-256-cbc', key, iv); 
+	let encrypted = cipher.update(imageBuffer);
+	encrypted = Buffer.concat([encrypted, cipher.final()]);
+	return encrypted
+}
 
-// decrypt(
-// 	"301c78344fbf85caf325dc96dc45e5e9",
-// 	getKey(
-// 		"123",
-// 		"n39VriGNIkbYEhxfgPPupuMgVxPIucYOul73iLwSoTamb5uqjMcPa"
-// 	),
-// 	Buffer.from(
-// 		"1fc055638a0e0fdddb1b881ea44f0226",
-// 		'hex'
-// 	)
-// )
+/**
+ * Decrypt the encrypted image data from Firebird
+ * @param {Buffer} encryptedData - The encrypted image data from the database
+ * @param {Buffer} key - The AES encryption key
+ * @param {Buffer} iv - The initialization vector used for encryption
+ * @returns {Buffer} - The decrypted image data
+ */
+function decryptImage(encryptedData, key, iv) {
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encryptedData);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted;
+}
 
-module.exports = { encrypt, decrypt, getKey, createIv }
+module.exports = { encrypt, decrypt, getKey, createIv, decryptImage }

@@ -1,9 +1,10 @@
 import face_recognition
 import sys
+from io import BytesIO
 
-def recognize_faces(reference_image_path, captured_image_path):
-    ref_image = face_recognition.load_image_file(reference_image_path)
-    captured_image = face_recognition.load_image_file(captured_image_path)
+def recognize_faces(reference_image_blob, captured_image_blob):
+    ref_image = face_recognition.load_image_file(BytesIO(reference_image_blob))
+    captured_image = face_recognition.load_image_file(BytesIO(captured_image_blob))
 
     ref_encoding = face_recognition.face_encodings(ref_image)
     captured_encoding = face_recognition.face_encodings(captured_image)
@@ -16,7 +17,14 @@ def recognize_faces(reference_image_path, captured_image_path):
     print("Match" if match[0] else "No Match")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python face_recognition_script.py <reference_image> <captured_image>")
-    else:
-        recognize_faces(sys.argv[1], sys.argv[2])
+    input_data = sys.stdin.buffer.read()
+    separator = b"====SEPARATOR===="
+    parts = input_data.split(separator)
+
+    if len(parts) != 2:
+        print("Error: Incorrect number of images received.")
+        sys.exit(1)
+    
+    reference_image_blob = parts[0]
+    captured_image_blob = parts[1]
+    recognize_faces(reference_image_blob, captured_image_blob)

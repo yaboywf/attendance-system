@@ -9,7 +9,7 @@ const db = require("./database");
 const { type } = require("os");
 const fs = require("fs");
 const cron = require('node-cron');
-const { encrypt, decrypt, getKey } = require("./encryption");
+const { encrypt, decrypt, getKey, decryptImage } = require("./encryption");
 require("dotenv").config();
 const { spawn } = require('child_process');
 const queryDatabase = require("./database");
@@ -21,7 +21,7 @@ app.use(express.json());
 
 app.use(cors({
     origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
 
@@ -39,6 +39,13 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use((req, res, next) => {
+	res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+	res.setHeader('Pragma', 'no-cache');
+	res.setHeader('Expires', '0');
+	next();
+});
 
 const dbConfig = {
     database: path.join(__dirname, 'DATABASE.FDB'),
@@ -106,6 +113,22 @@ app.post("/api/authenticate", (req, res, next) => {
 	})(req, res, next);
 });
 
+app.put("/api/logout", isAuthenticated, (req, res) => {
+	req.logout((err) => {
+		if (err) {
+			return res.status(500).json({ status: "fail", message: "Error logging out" });
+		}
+
+		req.session.destroy((err) => {
+			if (err) {
+			 	return res.status(500).json({ status: "fail", message: "Error clearing session" });
+			}
+
+			res.json({ status: "success" });
+		})
+	});
+})
+
 function isAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) return next();
 	res.status(401).json({ status: "fail" })
@@ -117,6 +140,39 @@ app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	const accountType = decrypt(req.user.account_type, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex')) 
 	res.json({ status: "success", user: { username: req.user.username, email: email, account_type: accountType } });
 });
+
+app.get("/api/get_user_image", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) user_image FROM users WHERE id = ?;", [req.user.id])
+	.then(result => {
+		const image = result[0].user_image;
+
+		image(function (err, _, e) {
+			if (err) {
+				res.status(500).send("Error retrieving image");
+				return;
+			}
+
+			let buffers = [];
+			e.on('data', function (chunk) {
+				buffers.push(chunk);
+			});
+
+			e.on('end', function () {
+				let buffer = Buffer.concat(buffers);
+				try {
+					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const iv = Buffer.from(req.user.iv, 'hex')
+					const decryptedImageBuffer = decryptImage(buffer, key, iv);
+		
+					res.setHeader('Content-Type', 'image/jpeg');
+					res.send(decryptedImageBuffer);
+				} catch (decryptionError) {
+					console.error('Decryption failed:', decryptionError.message);
+				}
+			});
+		});
+	})
+})
 
 app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
 	const { ip } = req.body 
@@ -166,23 +222,62 @@ app.post("/api/mark_attendance/location", isAuthenticated, (req, res) => {
 
 app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 	const base64Data = req.body.image.replace(/^data:image\/jpeg;base64,/, '');
-    const imagePath = path.join(__dirname, `captured_${Date.now()}.jpg`);
-	fs.writeFileSync(imagePath, base64Data, 'base64');
+    const capturedImageBuffer = Buffer.from(base64Data, 'base64');
 
-	const referenceImage = 'WIN_20250310_21_00_39_Pro.jpg';
-	const faceRecognition = spawn('python', ['face_recognition1.py', referenceImage, imagePath]);
+	queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) user_image FROM users WHERE id = ?;", [req.user.id])
+	.then(result => {
+		const image = result[0].user_image;
 
-	faceRecognition.stdout.on('data', (data) => {
-		const result = data.toString().trim();
-		req.session.face = result === 'Match'
-		return res.json({ status: result === 'Match' ? "success" : "fail" });
-	});
+		if (!image) {
+			return res.status(404).send("User image not found.");
+		}
 
-	req.session.face = false
-	faceRecognition.stderr.on('data', (data) => { 
-		console.error(`Python Error: ${data}`);
-        return res.status(500).json({ error: 'Face recognition failed' });
-	});
+		image(function (err, _, e) {
+			if (err) {
+				return res.status(500).send("Error retrieving image");
+			}
+
+			let buffers = [];
+			e.on('data', function (chunk) {
+				buffers.push(chunk);
+			});
+
+			e.on('end', function () {
+				let buffer = Buffer.concat(buffers);
+				try {
+					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const iv = Buffer.from(req.user.iv, 'hex')
+					const decryptedImageBuffer = decryptImage(buffer, key, iv);
+					
+					const faceRecognition = spawn('python', ['face_recognition1.py']);
+					faceRecognition.stdin.write(decryptedImageBuffer);
+					faceRecognition.stdin.write(Buffer.from("====SEPARATOR===="));
+					faceRecognition.stdin.write(capturedImageBuffer);
+					faceRecognition.stdin.end();
+
+					faceRecognition.stdout.on('data', (data) => {
+						const result = data.toString().trim();
+						console.log(result)
+						req.session.face = result === 'Match'
+						return res.json({ status: result === 'Match' ? "success" : "fail" });
+					});
+
+					faceRecognition.stderr.on('data', (data) => { 
+						console.error(`Python Error: ${data}`);
+						if (!res.headersSent) {
+                            return res.status(500).json({ error: 'Face recognition failed' });
+                        }
+					});
+				} catch (decryptionError) {
+					req.session.face = false
+					console.error('Decryption failed:', decryptionError.message);
+					if (!res.headersSent) {
+                        return res.status(500).send("Decryption error");
+                    }
+				}
+			});
+		});
+	})
 })
 
 app.post("/api/mark_attendance/submit", (req, res) => {
@@ -196,7 +291,7 @@ app.post("/api/mark_attendance/submit", (req, res) => {
 	
 		queryDatabase("SELECT COALESCE(MAX(id), 0) FROM attendance;")
 		.then(data => {
-			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?)", [data[0].coalesce, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null])
+			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?)", [data[0].coalesce + 1, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null])
 			.then(() => {
 				res.json({ status: "success" })
 			})
@@ -204,6 +299,21 @@ app.post("/api/mark_attendance/submit", (req, res) => {
 	} else {
 		return res.json({ status: "fail", message: "You have not completed all checks" })
 	}
+})
+
+app.put("/api/update_email", (req, res) => {
+	const newEmail = req.body.email;
+
+	if (newEmail === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
+
+	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+	queryDatabase("UPDATE users SET email = ? WHERE id = ?", [encryptedEmail, req.user.id])
+	.then(() => {
+		return res.json({ status: "success" })
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
 })
 
 if (process.env.NODE_ENV !== "test") {
