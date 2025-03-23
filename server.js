@@ -6,18 +6,18 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 const db = require("./database");
-const { type } = require("os");
 const fs = require("fs");
 const cron = require('node-cron');
-const { encrypt, decrypt, getKey, decryptImage } = require("./encryption");
+const { encrypt, decrypt, getKey, decryptImage, createIv, encryptImage } = require("./encryption");
 require("dotenv").config();
 const { spawn } = require('child_process');
 const queryDatabase = require("./database");
+const helmet = require('helmet');
 
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 app.use(cors({
     origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
@@ -37,6 +37,63 @@ app.use(
         }
 	})
 );
+
+app.use(helmet());
+app.use(
+	helmet.referrerPolicy({
+		policy: 'no-referrer-when-downgrade',
+	})
+);
+
+app.use(
+	helmet.hsts({
+		maxAge: 31536000,
+		includeSubDomains: true,
+		preload: true,
+	})
+);
+
+app.use(
+	helmet.crossOriginOpenerPolicy({
+		policy: 'same-origin'
+	})
+);
+
+app.use(
+	helmet.noSniff()
+);
+  
+app.use(
+	helmet.frameguard({
+	  	action: 'sameorigin',
+	})
+);
+  
+app.use(
+	helmet.xssFilter()
+);
+
+app.use(
+	helmet.contentSecurityPolicy({
+		directives: {
+			defaultSrc: ["'self'"],
+			scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+			styleSrc: ["'self'", "'unsafe-inline'"],
+			imgSrc: ["'self'", "data:"],
+			connectSrc: ["'self'"],
+			fontSrc: ["'self'", "https://fonts.gstatic.com"],
+			objectSrc: ["'none'"],
+			mediaSrc: ["'self'"],
+			frameSrc: ["'none'"],
+			childSrc: ["'none'"],
+			formAction: ["'self'"], // Allow form submissions only to the same origin
+			frameAncestors: ["'none'"],
+			manifestSrc: ["'self'"],
+			upgradeInsecureRequests: [],
+		},
+	})
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -257,7 +314,6 @@ app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 
 					faceRecognition.stdout.on('data', (data) => {
 						const result = data.toString().trim();
-						console.log(result)
 						req.session.face = result === 'Match'
 						return res.json({ status: result === 'Match' ? "success" : "fail" });
 					});
@@ -285,13 +341,13 @@ app.post("/api/mark_attendance/submit", (req, res) => {
 		const submittedTime = req.session.submitted_time
 		const processedTime = new Date().toISOString()
 
-		const encryptedAttendanceDateTime = encrypt(submittedTime, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
-		const encryptedUpdatedDateTime = encrypt(processedTime, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
-		const encryptedStatus = encrypt("1", getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+		const encryptedAttendanceDateTime = encrypt(submittedTime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
+		const encryptedUpdatedDateTime = encrypt(processedTime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
+		const encryptedStatus = encrypt("1", Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 	
 		queryDatabase("SELECT COALESCE(MAX(id), 0) FROM attendance;")
 		.then(data => {
-			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?)", [data[0].coalesce + 1, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null])
+			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?, ?)", [data[0].coalesce + 1, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null, req.user.iv])
 			.then(() => {
 				res.json({ status: "success" })
 			})
@@ -313,6 +369,40 @@ app.put("/api/update_email", (req, res) => {
 	})
 	.catch(err => {
 		return res.json({ status: "fail", message: err })
+	})
+})
+
+app.post("/api/forms", isAuthenticated, (req, res) => {
+	const startDate = req.body.start_date
+	const endDate = req.body.end_date
+	const formType = req.body.form_type
+	const reason = req.body.reason
+
+	if (new Date(endDate) < new Date(startDate)) return res.status(422).json({ status: "fail", message: "End date cannot be earlier than start date"})
+	if (formType.toLowerCase() === "loa" && reason === "") return res.status(422).json({ status: "fail", message: "Reason is required but is empty" }) 
+
+	const base64Data = req.body.file.replace(/^data:image\/jpeg;base64,/, '');
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+	const encryptionIv = createIv()
+
+	const encryptedFile = encryptImage(fileBuffer, encryptionKey, encryptionIv)
+	const encryptedStartDate = encrypt(startDate, encryptionKey, encryptionIv)
+	const encryptedEndDate = encrypt(endDate, encryptionKey, encryptionIv)
+	const encryptedReason = reason ? encrypt(reason, encryptionKey, encryptionIv) : null
+	const encryptedStatus = encrypt("pending", encryptionKey, encryptionIv)
+	const encryptedFormType = encrypt(formType.toLowerCase(), encryptionKey, encryptionIv)
+
+	queryDatabase("SELECT COALESCE(MAX(id), 0) FROM forms_new;")
+	.then(result => {
+		const newId = result[0].coalesce + 1
+		queryDatabase("INSERT INTO forms_new VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", [newId, req.user.id, encryptedFormType, encryptedStartDate, encryptedEndDate, encryptedReason, encryptedStatus, encryptedFile, encryptionIv.toString('hex')])
+		.then(() => {
+			res.json({ status: "success" })
+		})
+	})
+	.catch(err => {
+		res.status(500).json({ status: "fail", message: err })
 	})
 })
 
