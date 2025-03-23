@@ -11,6 +11,7 @@ import ProfilePage from './javascript/ProfilePage';
 import HelpPage from './javascript/HelpPage';
 import ErrorStack from "./javascript/Errors";
 import ResetPasswordPage from "./javascript/ResetPasswordPage";
+import MyAttendance from './javascript/MyAttendance';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -36,6 +37,7 @@ root.render(
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/forms" element={<FormsPage />} />
                     <Route path="/attendance" element={<AttendanceMarking />} />
+                    <Route path="/my_attendance" element={<MyAttendance />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route path="/terms" element={<HelpPage />} />
