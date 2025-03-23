@@ -23,11 +23,34 @@ function ProfilePage() {
 
     const handleSubmitPassword = async (e) => {
         e.preventDefault();
-        axios.post("http://127.0.0.1:3000/api/update_profile", e.target, { withCredentials: true })
+
+        if (e.target.new.value === "") return addError("Password cannot be empty");
+        if (!passwordCriterias.uppercase || !passwordCriterias.lowercase || !passwordCriterias.numbers || !passwordCriterias.special || !passwordCriterias.length) return addError("Password does not meet requirements");
+        if (e.target.new.value !== e.target.confirm.value) return addError("Passwords do not match");
+
+        axios.put("http://127.0.0.1:3000/api/reset_password", { password: e.target.new.value, confirm: e.target.confirm.value }, { withCredentials: true })
         .then(resp => {
-            if (resp.data.status === "success") window.location.reload()
+            if (resp.data.status === "success") {
+                addError("Password Updated. You will be redirected shortly", "success")
+
+                setTimeout(() => {
+                    axios.put("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
+                    .then(resp => {
+                        if (resp.data.status === "success") {
+                            window.location.href = "/"
+                        }
+                    })
+                    .catch(err => {
+                        addError("Something went wrong when trying to logout")
+                        console.error(err)
+                    })
+                }, 3000)
+            }
         })
-        .catch(() => addError("Something went wrong when updating profile"));
+        .catch((err) => {
+            addError("Something went wrong when reseting password")
+            console.error(err)
+        });
     }
 
     const handleSubmitEmail = (e) => {
@@ -55,7 +78,7 @@ function ProfilePage() {
                 }
             })
             .catch(err => {
-                addError("Something went wrong when trying to update your email")
+                addError(err.response.data.message)
                 console.error(err)
             })
         }
@@ -106,7 +129,7 @@ function ProfilePage() {
                 <button type="submit" onClick={handleSubmitEmail}>Update Email</button>
             </form>
 
-            <form>
+            <form onSubmit={handleSubmitPassword}>
                 <h3>Password</h3>
                 <input type="text" name="username" autoComplete="username" id="username" hidden />
 
@@ -114,10 +137,10 @@ function ProfilePage() {
                 <input type="password" id="current-password" name="current-password" placeholder="Enter Current Password" autoComplete="current-password" required />
 
                 <label htmlFor="new-password">New Password:</label>
-                <input type="password" id="new-password" name="new-password" placeholder="Enter New Password" autoComplete="new-password" required onChange={(e) => check(e.target.value)} />
+                <input type="password" id="new-password" name="new" placeholder="Enter New Password" autoComplete="new-password" required onChange={(e) => check(e.target.value)} />
 
                 <label htmlFor="confirm-password">Confirm Password:</label>
-                <input type="password" id="confirm-password" name="confirm-password" placeholder="Enter New Password Again" autoComplete="off" required />
+                <input type="password" id="confirm-password" name="confirm" placeholder="Enter New Password Again" autoComplete="off" required />
 
                 <ul>
                     <li className={passwordCriterias.uppercase ? "check" : "cross"}>Password must contain uppercase letters</li>
@@ -127,7 +150,7 @@ function ProfilePage() {
                     <li className={passwordCriterias.length ? "check" : "cross"}>Password must be at least 8 characters long</li>
                 </ul>
 
-                <button type="submit" onClick={handleSubmitPassword}>Update Password</button>
+                <button type="submit">Update Password</button>
             </form>
         </div>
     );

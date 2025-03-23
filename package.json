@@ -16,8 +16,10 @@
     "helmet": "^8.1.0",
     "node-cron": "^3.0.3",
     "node-firebird": "^1.1.9",
+    "nodemailer": "^6.10.0",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "concurrently": "^7.0.0",

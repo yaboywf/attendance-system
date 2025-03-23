@@ -20,7 +20,7 @@ main {
     display: flex;
 }
 
-main:not(:has(.login-page)) {
+main:not(:has(.login-page)):not(:has(.reset-password)) {
     min-height: 100vh;
 }
 

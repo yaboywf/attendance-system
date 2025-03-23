@@ -10,6 +10,7 @@ import AttendanceMarking from './javascript/AttendanceMarking';
 import ProfilePage from './javascript/ProfilePage';
 import HelpPage from './javascript/HelpPage';
 import ErrorStack from "./javascript/Errors";
+import ResetPasswordPage from "./javascript/ResetPasswordPage";
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -20,6 +21,7 @@ import './styles/Forms.scss'
 import './styles/Attendance.scss'
 import './styles/ProfilePage.scss'
 import './styles/HelpPage.scss'
+import './styles/ResetPasswordPage.scss'
 
 const container = document.body;
 const root = createRoot(container);
@@ -37,6 +39,7 @@ root.render(
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route path="/terms" element={<HelpPage />} />
+                    <Route path="/forget_password/verify/:resetId" element={<ResetPasswordPage />} />
                 </Route>
             </Routes>
         </Router>

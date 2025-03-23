@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useError } from "./ErrorContext";
+import axios from "axios";
 
 function LoginPage() {
     const [formType, setFormType] = useState("login");
@@ -49,6 +50,24 @@ function LoginPage() {
         }
     }
 
+    const ResetPassword = (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const email = formData.get("email");
+
+        axios.post("http://127.0.0.1:3000/api/forget_password", { email }, { headers: { "Content-Type": "application/json" } })
+        .then(resp => {
+            if (resp.data.status === "success") {
+                addError("Password reset email sent", "success")
+            }
+        })
+        .catch(err => {
+            addError("Something went wrong when trying to reset your password");
+            console.error(err);
+        })
+    }
+
     return (
         <div className="login-page">
             {formType === "login" && <section>
@@ -82,7 +101,7 @@ function LoginPage() {
                     <p>Fear not! We got that covered too!</p>
                 </div>
 
-                <form action="">
+                <form onSubmit={(e) => ResetPassword(e)}>
                     <label htmlFor="email">Email:</label>
                     <input type="text" id="email" name="email" autoComplete="email" required placeholder="Enter your email" />
 

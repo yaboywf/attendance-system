@@ -9,10 +9,12 @@ const db = require("./database");
 const fs = require("fs");
 const cron = require('node-cron');
 const { encrypt, decrypt, getKey, decryptImage, createIv, encryptImage } = require("./encryption");
-require("dotenv").config();
 const { spawn } = require('child_process');
 const queryDatabase = require("./database");
 const helmet = require('helmet');
+const nodemailer = require('nodemailer');
+const sharp = require('sharp');
+require("dotenv").config();
 
 const app = express();
 
@@ -104,6 +106,17 @@ app.use((req, res, next) => {
 	next();
 });
 
+const transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: process.env.EMAIL_ADDRESS,
+		pass: process.env.EMAIL_PASSWORD
+	},
+	tls: {
+		rejectUnauthorized: false,
+	},
+});
+
 const dbConfig = {
     database: path.join(__dirname, 'DATABASE.FDB'),
     backupDir: path.join(__dirname, 'backups'),
@@ -193,8 +206,8 @@ function isAuthenticated(req, res, next) {
 
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	const password = req.session.enteredPassword
-	const email = decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
-	const accountType = decrypt(req.user.account_type, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex')) 
+	const email = req.user.email === "" ? "" : decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+	const accountType = decrypt(req.user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 	res.json({ status: "success", user: { username: req.user.username, email: email, account_type: accountType } });
 });
 
@@ -217,12 +230,18 @@ app.get("/api/get_user_image", isAuthenticated, (req, res) => {
 			e.on('end', function () {
 				let buffer = Buffer.concat(buffers);
 				try {
-					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 					const iv = Buffer.from(req.user.iv, 'hex')
 					const decryptedImageBuffer = decryptImage(buffer, key, iv);
 		
-					res.setHeader('Content-Type', 'image/jpeg');
-					res.send(decryptedImageBuffer);
+					sharp(decryptedImageBuffer).toFormat('webp').toBuffer()
+					.then(webpBuffer => {
+						res.setHeader('Content-Type', 'image/webp');
+						res.send(webpBuffer);
+					})
+					.catch(() => {
+						res.status(400).send('Invalid image format or error converting image');
+					});
 				} catch (decryptionError) {
 					console.error('Decryption failed:', decryptionError.message);
 				}
@@ -302,7 +321,7 @@ app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 			e.on('end', function () {
 				let buffer = Buffer.concat(buffers);
 				try {
-					const key = getKey(req.session.enteredPassword, req.user.password.split("$")[3]);
+					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 					const iv = Buffer.from(req.user.iv, 'hex')
 					const decryptedImageBuffer = decryptImage(buffer, key, iv);
 					
@@ -363,7 +382,7 @@ app.put("/api/update_email", (req, res) => {
 	if (newEmail === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
 
 	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
-	queryDatabase("UPDATE users SET email = ? WHERE id = ?", [encryptedEmail, req.user.id])
+	queryDatabase("UPDATE users SET email = ?, hashed_email = ? WHERE id = ?", [encryptedEmail, bcrypt.hashSync(newEmail), req.user.id])
 	.then(() => {
 		return res.json({ status: "success" })
 	})
@@ -381,7 +400,7 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	if (new Date(endDate) < new Date(startDate)) return res.status(422).json({ status: "fail", message: "End date cannot be earlier than start date"})
 	if (formType.toLowerCase() === "loa" && reason === "") return res.status(422).json({ status: "fail", message: "Reason is required but is empty" }) 
 
-	const base64Data = req.body.file.replace(/^data:image\/jpeg;base64,/, '');
+	const base64Data = req.body.file.replace(req.body.file.match(/^data:(image\/(jpeg|jpg|webp|png)|application\/pdf);base64,/)[0], '');
     const fileBuffer = Buffer.from(base64Data, 'base64');
 	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 	const encryptionIv = createIv()
@@ -404,6 +423,134 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	.catch(err => {
 		res.status(500).json({ status: "fail", message: err })
 	})
+})
+
+app.post("/api/forget_password", (req, res) => {
+	const email = req.body.email
+	if (!email || email === "") return res.status(400).json({ status: "fail", message: "Email cannot be empty" })
+
+	const resetId = createIv().toString('hex')
+
+	queryDatabase("SELECT id, hashed_email FROM users;")
+	.then(result => {
+		let requestedUser = null;
+		result.forEach(user => {
+			console.log(email, user.hashed_email)
+			if (bcrypt.compareSync(email, user.hashed_email)) {
+				requestedUser = user.id;
+				queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
+				.then(() => {
+					const mailOptions = {
+						from: process.env.EMAIL_ADDRESS,
+						to: email,
+						subject: "AttendEase - Password Reset",
+						text: `
+Hello ${email},
+
+You have requested to reset your password for AttendEase. Please click the following link to reset your password:
+
+http://127.0.0.1:3001/forget_password/verify/${resetId}
+
+For security reasons, do not share this link with anyone else. This link will expire in 1 hour. 
+
+If you did not request to reset your password, please ignore this email.
+
+Kind regards,
+AttendEase
+						`
+					}
+			
+					transporter.sendMail(mailOptions, (error) => {
+						if (error) {
+							console.log('Error sending email:', error);
+						}
+			
+						return res.json({ status: "success" })
+					});
+				})
+				.catch(err => {
+					return res.json({ status: "fail", message: err })
+				})
+			}
+		})
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
+})
+
+app.post("/api/verify/:resetId", (req, res) => {
+	const resetId = req.params.resetId
+	if (!resetId || resetId === "") return res.status(400).json({ status: "fail", message: "Reset ID cannot be empty" })
+
+	queryDatabase("SELECT * FROM resets WHERE id = ?;", [resetId])
+	.then(result => {
+		if (result.length > 0) {
+			const user = result[0];
+			const expiry = Number(user.expiry);
+			const now = Math.floor(new Date().getTime() / 1000);
+
+			if (now > expiry) {
+				queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry > ?;", [resetId, now])
+				.then(() => {
+					return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+				})
+				.catch(err => {
+					return res.status(400).json({ status: "fail", message: err })
+				})
+			}
+
+			return res.json({ status: "success", user_id: user.user_id })
+		} else {
+			return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+		}
+	})
+	.catch(() => {
+		return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+	})
+})
+
+app.put("/api/reset_password", (req, res) => {
+	const newPassword = req.body.password
+	const confirmPassword = req.body.confirm
+	console.log(req.body)
+	const userId = req.body.user_id || req.user.id
+	const currentPassword = req.session.enteredPassword || null
+
+	if (!newPassword || newPassword === "") return res.status(400).json({ status: "fail", message: "Password cannot be empty" })
+	if (!confirmPassword || confirmPassword === "") return res.status(400).json({ status: "fail", message: "Confirm Password cannot be empty" })
+	if (newPassword !== confirmPassword) return res.status(400).json({ status: "fail", message: "Passwords do not match" })
+
+	if (!currentPassword) {
+		queryDatabase("UPDATE users SET password = ?, email = '', hashed_email = '' WHERE id = ?;", [bcrypt.hashSync(newPassword), userId])
+		.then(() => {
+			return res.json({ status: "success" })
+		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
+	} else {
+		if (!bcrypt.compareSync(currentPassword, req.user.password)) return res.status(400).json({ status: "fail", message: "Incorrect password" })
+
+		queryDatabase("SELECT email FROM users WHERE id = ?;", [userId])
+		.then(result => {
+			const email = result[0].email
+			const decryptedEmail = decrypt(email, getKey(currentPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+			const hashedPassword = bcrypt.hashSync(newPassword)
+			const reEncryptedEmail = encrypt(decryptedEmail, getKey(newPassword, hashedPassword.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+
+			queryDatabase("UPDATE users SET password = ?, email = ? WHERE id = ?;", [hashedPassword, reEncryptedEmail, userId])
+			.then(() => {
+				return res.json({ status: "success" })
+			})
+			.catch(err => {
+				return res.json({ status: "fail", message: err })
+			})
+		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
+	}
 })
 
 if (process.env.NODE_ENV !== "test") {

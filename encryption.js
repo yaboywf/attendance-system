@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
+const queryDatabase = require('./database');
 
 function createIv() {
 	return crypto.randomBytes(16);
