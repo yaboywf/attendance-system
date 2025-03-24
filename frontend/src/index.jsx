@@ -23,6 +23,7 @@ import './styles/Attendance.scss'
 import './styles/ProfilePage.scss'
 import './styles/HelpPage.scss'
 import './styles/ResetPasswordPage.scss'
+import './styles/MyAttendance.scss'
 
 const container = document.body;
 const root = createRoot(container);

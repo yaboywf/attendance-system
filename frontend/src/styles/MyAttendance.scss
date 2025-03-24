@@ -1,0 +1,38 @@
+.myattendance {
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    overflow-y: auto;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    section {
+        display: grid;
+        grid-template-columns: 60px 150px 100px 150px 1fr;
+        border: 1px solid black;
+        border-radius: 10px;
+        align-items: center;
+
+        p {
+            padding: 5px 10px;
+            border-bottom: 1px solid black;
+            border-right: 1px solid black;
+        }
+
+        p:last-of-type {
+            border-right: none;
+        }
+
+        div:last-of-type p {
+            border-bottom: none;
+        }
+
+        div {
+            display: contents;
+        }
+    }
+}

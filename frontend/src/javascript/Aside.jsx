@@ -83,7 +83,7 @@ function Aside({ user }) {
                     </button>
                     <button data-active={page === "myattendance"} onClick={() => goToPage("/my_attendance") }>
                         <i className="fa-solid fa-clipboard-user"></i>
-                        My Profile
+                        My Attendance
                     </button>
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>
