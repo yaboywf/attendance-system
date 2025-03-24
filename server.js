@@ -553,6 +553,45 @@ app.put("/api/reset_password", (req, res) => {
 	}
 })
 
+app.get("/api/get_attendance", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT attendance_datetime, status, remarks, iv FROM attendance WHERE user_id = ?;", [req.user.id])
+	.then(result => {
+		if (result.length === 0) return res.json({ status: "success", data: [] })
+
+		result.forEach(attendance => {
+			attendance.attendance_datetime = decrypt(attendance.attendance_datetime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+			attendance.attendance_datetime = attendance.attendance_datetime.split("T")[0]
+			attendance.status = decrypt(attendance.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+			attendance.remarks = attendance.remarks === null ? "" : decrypt(attendance.remarks, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+		})
+
+		return res.json({ status: "success", data: result })
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
+})
+
+app.get("/api/get_forms", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT start_date, end_date, status, iv FROM forms_new WHERE user_id = ?;", [req.user.id])
+	.then(result => {
+		if (result.length === 0) return res.json({ status: "success", data: [] })
+
+		result.forEach(form => {
+			form.start_date = decrypt(form.start_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+			form.start_date = form.start_date.split("T")[0]
+			form.end_date = decrypt(form.end_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+			form.end_date = form.end_date.split("T")[0]
+			form.status = decrypt(form.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+		})
+
+		return res.json({ status: "success", data: result })
+	})
+	.catch(err => {
+		return res.json({ status: "fail", message: err })
+	})
+})
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {

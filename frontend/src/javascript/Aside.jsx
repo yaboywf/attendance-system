@@ -30,6 +30,8 @@ function Aside({ user }) {
             setPage("submit");
         } else if (path === "/attendance") {
             setPage("attendance");
+        } else if (path === "/my_attendance") {
+            setPage("myattendance");
         } else if (path === "/help") {
             setPage("help");
         } else if (path === "/profile") {
@@ -78,6 +80,10 @@ function Aside({ user }) {
                     <button data-active={page === "help"} onClick={() => goToPage("/help") }>
                         <i className="fa-solid fa-question"></i>
                         Help
+                    </button>
+                    <button data-active={page === "myattendance"} onClick={() => goToPage("/my_attendance") }>
+                        <i className="fa-solid fa-clipboard-user"></i>
+                        My Attendance
                     </button>
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>

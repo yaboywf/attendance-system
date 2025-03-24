@@ -19,8 +19,6 @@ function DashboardPage() {
                     list of pending tasks
                 </div>
             </section>
-
-            <p>Made by Dylan Yeo</p>
         </div>
     );
 }
