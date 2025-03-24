@@ -1,0 +1,111 @@
+.student-management {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    width: 100%;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    > section:first-of-type {
+        position: sticky;
+        top: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 5px 0;
+
+        input {
+            padding: 5px 10px;
+            border: none;
+            width: 200px;
+            border-radius: 0px;
+            border-bottom: 1px solid black;
+            outline: none;
+            background: none;
+        }
+
+        label i {
+            margin-right: 5px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            background: black;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: auto;
+        }
+    }
+
+    > section:nth-of-type(2) {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .user {
+        width: 300px;
+        display: flex;
+        flex-shrink: 0;
+        gap: 10px;
+        height: 150px;
+        padding: 10px;
+        border: 1px solid black;
+        border-radius: 10px;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+            transform: translateY(-5px);
+        }
+
+        img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 1px solid black;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        div {
+            height: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: flex-start;
+            width: 50%;
+            overflow-y: hidden;
+        }
+
+        hr {
+            height: 100%;
+        }
+
+        p:first-of-type {
+            font-weight: bold;
+            font-size: 18px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        p:last-of-type {
+            text-transform: capitalize;
+        }
+    }
+}

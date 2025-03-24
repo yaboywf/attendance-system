@@ -22,9 +22,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '50mb' }));
 
 app.use(cors({
-    origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
+	origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
+	methods: ['GET', 'POST', 'PUT', 'DELETE'],
+	credentials: true
 }));
 
 app.use(
@@ -33,10 +33,10 @@ app.use(
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
-            httpOnly: true,
-            secure: false,
-            maxAge: 1000 * 60 * 60 * 24
-        }
+			httpOnly: true,
+			secure: false,
+			maxAge: 1000 * 60 * 60 * 24
+		}
 	})
 );
 
@@ -64,13 +64,13 @@ app.use(
 app.use(
 	helmet.noSniff()
 );
-  
+
 app.use(
 	helmet.frameguard({
-	  	action: 'sameorigin',
+		action: 'sameorigin',
 	})
 );
-  
+
 app.use(
 	helmet.xssFilter()
 );
@@ -118,22 +118,22 @@ const transporter = nodemailer.createTransport({
 });
 
 const dbConfig = {
-    database: path.join(__dirname, 'DATABASE.FDB'),
-    backupDir: path.join(__dirname, 'backups'),
+	database: path.join(__dirname, 'DATABASE.FDB'),
+	backupDir: path.join(__dirname, 'backups'),
 };
 
 function createBackup() {
-    const backupFile = path.join(dbConfig.backupDir, `database_backup_${new Date().toISOString().slice(0, 10)}.FDB`);
-    
-    fs.copyFile(dbConfig.database, backupFile, (err) => {
-        if (err) {
-            console.error("Error during backup:", err);
-        }
-    });
+	const backupFile = path.join(dbConfig.backupDir, `database_backup_${new Date().toISOString().slice(0, 10)}.FDB`);
+
+	fs.copyFile(dbConfig.database, backupFile, (err) => {
+		if (err) {
+			console.error("Error during backup:", err);
+		}
+	});
 }
 
 cron.schedule('0 0 * * 1', () => {
-    createBackup();
+	createBackup();
 });
 
 passport.use(
@@ -154,15 +154,15 @@ passport.use(
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
 	try {
-        const user = await db("SELECT * FROM USERS WHERE id = ?", [id]);
-        if (user && user.length > 0) {
-            done(null, user[0]);
-        } else {
-            done(new Error("User not found"));
-        }
-    } catch (err) {
-        done(err);
-    }
+		const user = await db("SELECT * FROM USERS WHERE id = ?", [id]);
+		if (user && user.length > 0) {
+			done(null, user[0]);
+		} else {
+			done(new Error("User not found"));
+		}
+	} catch (err) {
+		done(err);
+	}
 });
 
 app.get("/api/hello", (req, res) => {
@@ -175,7 +175,7 @@ app.post("/api/authenticate", (req, res, next) => {
 		if (err) return next(err);
 		if (!user) return res.status(401).json({ status: "fail", error: info.message });
 
-		req.logIn(user, (err) => { 
+		req.logIn(user, (err) => {
 			if (err) return next(err);
 			req.session.enteredPassword = enteredPassword;
 			res.json({ status: "success", user: user });
@@ -191,7 +191,7 @@ app.put("/api/logout", isAuthenticated, (req, res) => {
 
 		req.session.destroy((err) => {
 			if (err) {
-			 	return res.status(500).json({ status: "fail", message: "Error clearing session" });
+				return res.status(500).json({ status: "fail", message: "Error clearing session" });
 			}
 
 			res.json({ status: "success" });
@@ -213,47 +213,47 @@ app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 
 app.get("/api/get_user_image", isAuthenticated, (req, res) => {
 	queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) user_image FROM users WHERE id = ?;", [req.user.id])
-	.then(result => {
-		const image = result[0].user_image;
+		.then(result => {
+			const image = result[0].user_image;
 
-		image(function (err, _, e) {
-			if (err) {
-				res.status(500).send("Error retrieving image");
-				return;
-			}
-
-			let buffers = [];
-			e.on('data', function (chunk) {
-				buffers.push(chunk);
-			});
-
-			e.on('end', function () {
-				let buffer = Buffer.concat(buffers);
-				try {
-					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
-					const iv = Buffer.from(req.user.iv, 'hex')
-					const decryptedImageBuffer = decryptImage(buffer, key, iv);
-		
-					sharp(decryptedImageBuffer).toFormat('webp').toBuffer()
-					.then(webpBuffer => {
-						res.setHeader('Content-Type', 'image/webp');
-						res.send(webpBuffer);
-					})
-					.catch(() => {
-						res.status(400).send('Invalid image format or error converting image');
-					});
-				} catch (decryptionError) {
-					console.error('Decryption failed:', decryptionError.message);
+			image(function (err, _, e) {
+				if (err) {
+					res.status(500).send("Error retrieving image");
+					return;
 				}
+
+				let buffers = [];
+				e.on('data', function (chunk) {
+					buffers.push(chunk);
+				});
+
+				e.on('end', function () {
+					let buffer = Buffer.concat(buffers);
+					try {
+						const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+						const iv = Buffer.from(req.user.iv, 'hex')
+						const decryptedImageBuffer = decryptImage(buffer, key, iv);
+						
+						sharp(decryptedImageBuffer).toFormat('webp').toBuffer()
+							.then(webpBuffer => {
+								res.setHeader('Content-Type', 'image/webp');
+								res.send(webpBuffer);
+							})
+							.catch(() => {
+								res.status(400).send('Invalid image format or error converting image');
+							});
+					} catch (decryptionError) {
+						console.error('Decryption failed:', decryptionError.message);
+					}
+				});
 			});
-		});
-	})
+		})
 })
 
 app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
-	const { ip } = req.body 
+	const { ip } = req.body
 	if (process.env.CRITERIA_IP === ip) {
-		req.session.ip = true 
+		req.session.ip = true
 		return res.json({ status: "success" });
 	}
 
@@ -264,7 +264,7 @@ app.post("/api/mark_attendance/ip", isAuthenticated, (req, res) => {
 app.post("/api/mark_attendance/time", isAuthenticated, (req, res) => {
 	const currentTime = new Date()
 	req.session.submitted_time = currentTime.toISOString();
-  	const currentHour = currentTime.getHours();
+	const currentHour = currentTime.getHours();
 
 	if (currentHour >= parseInt(process.env.CRITERIA_START_TIME) && currentHour < parseInt(process.env.CRITERIA_END_TIME)) {
 		req.session.time = true
@@ -272,7 +272,7 @@ app.post("/api/mark_attendance/time", isAuthenticated, (req, res) => {
 	}
 
 	req.session.time = false
-	return res.json({ status: "fail" });  
+	return res.json({ status: "fail" });
 })
 
 app.post("/api/mark_attendance/location", isAuthenticated, (req, res) => {
@@ -283,76 +283,76 @@ app.post("/api/mark_attendance/location", isAuthenticated, (req, res) => {
 	const bottomRightLon = parseFloat(process.env.CRITERIA_BOTTOM_RIGHT_LONGITUDE);
 
 	const isWithinBounds = (
-		latitude >= bottomRightLat && latitude <= topLeftLat &&	
+		latitude >= bottomRightLat && latitude <= topLeftLat &&
 		longitude >= topLeftLon && longitude <= bottomRightLon
 	);
 
 	if (isWithinBounds) {
 		req.session.location = true
-		return res.json({ status: "success" }); 
+		return res.json({ status: "success" });
 	}
 
 	req.session.location = false
-	return res.json({ status: "fail" }); 
+	return res.json({ status: "fail" });
 })
 
 app.post("/api/mark_attendance/face", isAuthenticated, (req, res) => {
 	const base64Data = req.body.image.replace(/^data:image\/jpeg;base64,/, '');
-    const capturedImageBuffer = Buffer.from(base64Data, 'base64');
+	const capturedImageBuffer = Buffer.from(base64Data, 'base64');
 
 	queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) user_image FROM users WHERE id = ?;", [req.user.id])
-	.then(result => {
-		const image = result[0].user_image;
+		.then(result => {
+			const image = result[0].user_image;
 
-		if (!image) {
-			return res.status(404).send("User image not found.");
-		}
-
-		image(function (err, _, e) {
-			if (err) {
-				return res.status(500).send("Error retrieving image");
+			if (!image) {
+				return res.status(404).send("User image not found.");
 			}
 
-			let buffers = [];
-			e.on('data', function (chunk) {
-				buffers.push(chunk);
-			});
-
-			e.on('end', function () {
-				let buffer = Buffer.concat(buffers);
-				try {
-					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
-					const iv = Buffer.from(req.user.iv, 'hex')
-					const decryptedImageBuffer = decryptImage(buffer, key, iv);
-					
-					const faceRecognition = spawn('python', ['face_recognition1.py']);
-					faceRecognition.stdin.write(decryptedImageBuffer);
-					faceRecognition.stdin.write(Buffer.from("====SEPARATOR===="));
-					faceRecognition.stdin.write(capturedImageBuffer);
-					faceRecognition.stdin.end();
-
-					faceRecognition.stdout.on('data', (data) => {
-						const result = data.toString().trim();
-						req.session.face = result === 'Match'
-						return res.json({ status: result === 'Match' ? "success" : "fail" });
-					});
-
-					faceRecognition.stderr.on('data', (data) => { 
-						console.error(`Python Error: ${data}`);
-						if (!res.headersSent) {
-                            return res.status(500).json({ error: 'Face recognition failed' });
-                        }
-					});
-				} catch (decryptionError) {
-					req.session.face = false
-					console.error('Decryption failed:', decryptionError.message);
-					if (!res.headersSent) {
-                        return res.status(500).send("Decryption error");
-                    }
+			image(function (err, _, e) {
+				if (err) {
+					return res.status(500).send("Error retrieving image");
 				}
+
+				let buffers = [];
+				e.on('data', function (chunk) {
+					buffers.push(chunk);
+				});
+
+				e.on('end', function () {
+					let buffer = Buffer.concat(buffers);
+					try {
+						const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+						const iv = Buffer.from(req.user.iv, 'hex')
+						const decryptedImageBuffer = decryptImage(buffer, key, iv);
+
+						const faceRecognition = spawn('python', ['face_recognition1.py']);
+						faceRecognition.stdin.write(decryptedImageBuffer);
+						faceRecognition.stdin.write(Buffer.from("====SEPARATOR===="));
+						faceRecognition.stdin.write(capturedImageBuffer);
+						faceRecognition.stdin.end();
+
+						faceRecognition.stdout.on('data', (data) => {
+							const result = data.toString().trim();
+							req.session.face = result === 'Match'
+							return res.json({ status: result === 'Match' ? "success" : "fail" });
+						});
+
+						faceRecognition.stderr.on('data', (data) => {
+							console.error(`Python Error: ${data}`);
+							if (!res.headersSent) {
+								return res.status(500).json({ error: 'Face recognition failed' });
+							}
+						});
+					} catch (decryptionError) {
+						req.session.face = false
+						console.error('Decryption failed:', decryptionError.message);
+						if (!res.headersSent) {
+							return res.status(500).send("Decryption error");
+						}
+					}
+				});
 			});
-		});
-	})
+		})
 })
 
 app.post("/api/mark_attendance/submit", (req, res) => {
@@ -363,14 +363,14 @@ app.post("/api/mark_attendance/submit", (req, res) => {
 		const encryptedAttendanceDateTime = encrypt(submittedTime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 		const encryptedUpdatedDateTime = encrypt(processedTime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 		const encryptedStatus = encrypt("1", Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
-	
+
 		queryDatabase("SELECT COALESCE(MAX(id), 0) FROM attendance;")
-		.then(data => {
-			queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?, ?)", [data[0].coalesce + 1, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null, req.user.iv])
-			.then(() => {
-				res.json({ status: "success" })
+			.then(data => {
+				queryDatabase("INSERT INTO attendance VALUES(?, ?, ?, ?, ?, ?, ?)", [data[0].coalesce + 1, req.user.id, encryptedAttendanceDateTime, encryptedUpdatedDateTime, encryptedStatus, null, req.user.iv])
+					.then(() => {
+						res.json({ status: "success" })
+					})
 			})
-		})
 	} else {
 		return res.json({ status: "fail", message: "You have not completed all checks" })
 	}
@@ -383,12 +383,12 @@ app.put("/api/update_email", (req, res) => {
 
 	const encryptedEmail = encrypt(newEmail, getKey(req.session.enteredPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
 	queryDatabase("UPDATE users SET email = ?, hashed_email = ? WHERE id = ?", [encryptedEmail, bcrypt.hashSync(newEmail), req.user.id])
-	.then(() => {
-		return res.json({ status: "success" })
-	})
-	.catch(err => {
-		return res.json({ status: "fail", message: err })
-	})
+		.then(() => {
+			return res.json({ status: "success" })
+		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
 })
 
 app.post("/api/forms", isAuthenticated, (req, res) => {
@@ -397,11 +397,11 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	const formType = req.body.form_type
 	const reason = req.body.reason
 
-	if (new Date(endDate) < new Date(startDate)) return res.status(422).json({ status: "fail", message: "End date cannot be earlier than start date"})
-	if (formType.toLowerCase() === "loa" && reason === "") return res.status(422).json({ status: "fail", message: "Reason is required but is empty" }) 
+	if (new Date(endDate) < new Date(startDate)) return res.status(422).json({ status: "fail", message: "End date cannot be earlier than start date" })
+	if (formType.toLowerCase() === "loa" && reason === "") return res.status(422).json({ status: "fail", message: "Reason is required but is empty" })
 
 	const base64Data = req.body.file.replace(req.body.file.match(/^data:(image\/(jpeg|jpg|webp|png)|application\/pdf);base64,/)[0], '');
-    const fileBuffer = Buffer.from(base64Data, 'base64');
+	const fileBuffer = Buffer.from(base64Data, 'base64');
 	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 	const encryptionIv = createIv()
 
@@ -413,16 +413,16 @@ app.post("/api/forms", isAuthenticated, (req, res) => {
 	const encryptedFormType = encrypt(formType.toLowerCase(), encryptionKey, encryptionIv)
 
 	queryDatabase("SELECT COALESCE(MAX(id), 0) FROM forms_new;")
-	.then(result => {
-		const newId = result[0].coalesce + 1
-		queryDatabase("INSERT INTO forms_new VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", [newId, req.user.id, encryptedFormType, encryptedStartDate, encryptedEndDate, encryptedReason, encryptedStatus, encryptedFile, encryptionIv.toString('hex')])
-		.then(() => {
-			res.json({ status: "success" })
+		.then(result => {
+			const newId = result[0].coalesce + 1
+			queryDatabase("INSERT INTO forms_new VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", [newId, req.user.id, encryptedFormType, encryptedStartDate, encryptedEndDate, encryptedReason, encryptedStatus, encryptedFile, encryptionIv.toString('hex')])
+				.then(() => {
+					res.json({ status: "success" })
+				})
 		})
-	})
-	.catch(err => {
-		res.status(500).json({ status: "fail", message: err })
-	})
+		.catch(err => {
+			res.status(500).json({ status: "fail", message: err })
+		})
 })
 
 app.post("/api/forget_password", (req, res) => {
@@ -432,19 +432,19 @@ app.post("/api/forget_password", (req, res) => {
 	const resetId = createIv().toString('hex')
 
 	queryDatabase("SELECT id, hashed_email FROM users;")
-	.then(result => {
-		let requestedUser = null;
-		result.forEach(user => {
-			console.log(email, user.hashed_email)
-			if (bcrypt.compareSync(email, user.hashed_email)) {
-				requestedUser = user.id;
-				queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
-				.then(() => {
-					const mailOptions = {
-						from: process.env.EMAIL_ADDRESS,
-						to: email,
-						subject: "AttendEase - Password Reset",
-						text: `
+		.then(result => {
+			let requestedUser = null;
+			result.forEach(user => {
+				console.log(email, user.hashed_email)
+				if (bcrypt.compareSync(email, user.hashed_email)) {
+					requestedUser = user.id;
+					queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
+						.then(() => {
+							const mailOptions = {
+								from: process.env.EMAIL_ADDRESS,
+								to: email,
+								subject: "AttendEase - Password Reset",
+								text: `
 Hello ${email},
 
 You have requested to reset your password for AttendEase. Please click the following link to reset your password:
@@ -458,25 +458,25 @@ If you did not request to reset your password, please ignore this email.
 Kind regards,
 AttendEase
 						`
-					}
-			
-					transporter.sendMail(mailOptions, (error) => {
-						if (error) {
-							console.log('Error sending email:', error);
-						}
-			
-						return res.json({ status: "success" })
-					});
-				})
-				.catch(err => {
-					return res.json({ status: "fail", message: err })
-				})
-			}
+							}
+
+							transporter.sendMail(mailOptions, (error) => {
+								if (error) {
+									console.log('Error sending email:', error);
+								}
+
+								return res.json({ status: "success" })
+							});
+						})
+						.catch(err => {
+							return res.json({ status: "fail", message: err })
+						})
+				}
+			})
 		})
-	})
-	.catch(err => {
-		return res.json({ status: "fail", message: err })
-	})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
 })
 
 app.post("/api/verify/:resetId", (req, res) => {
@@ -484,30 +484,30 @@ app.post("/api/verify/:resetId", (req, res) => {
 	if (!resetId || resetId === "") return res.status(400).json({ status: "fail", message: "Reset ID cannot be empty" })
 
 	queryDatabase("SELECT * FROM resets WHERE id = ?;", [resetId])
-	.then(result => {
-		if (result.length > 0) {
-			const user = result[0];
-			const expiry = Number(user.expiry);
-			const now = Math.floor(new Date().getTime() / 1000);
+		.then(result => {
+			if (result.length > 0) {
+				const user = result[0];
+				const expiry = Number(user.expiry);
+				const now = Math.floor(new Date().getTime() / 1000);
 
-			if (now > expiry) {
-				queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry > ?;", [resetId, now])
-				.then(() => {
-					return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
-				})
-				.catch(err => {
-					return res.status(400).json({ status: "fail", message: err })
-				})
+				if (now > expiry) {
+					queryDatabase("DELETE FROM resets WHERE reset_id = ? OR expiry > ?;", [resetId, now])
+						.then(() => {
+							return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
+						})
+						.catch(err => {
+							return res.status(400).json({ status: "fail", message: err })
+						})
+				}
+
+				return res.json({ status: "success", user_id: user.user_id })
+			} else {
+				return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
 			}
-
-			return res.json({ status: "success", user_id: user.user_id })
-		} else {
+		})
+		.catch(() => {
 			return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
-		}
-	})
-	.catch(() => {
-		return res.status(400).json({ status: "fail", message: "Link is invalid or has expired" })
-	})
+		})
 })
 
 app.put("/api/reset_password", (req, res) => {
@@ -523,73 +523,130 @@ app.put("/api/reset_password", (req, res) => {
 
 	if (!currentPassword) {
 		queryDatabase("UPDATE users SET password = ?, email = '', hashed_email = '' WHERE id = ?;", [bcrypt.hashSync(newPassword), userId])
-		.then(() => {
-			return res.json({ status: "success" })
-		})
-		.catch(err => {
-			return res.json({ status: "fail", message: err })
-		})
-	} else {
-		if (!bcrypt.compareSync(currentPassword, req.user.password)) return res.status(400).json({ status: "fail", message: "Incorrect password" })
-
-		queryDatabase("SELECT email FROM users WHERE id = ?;", [userId])
-		.then(result => {
-			const email = result[0].email
-			const decryptedEmail = decrypt(email, getKey(currentPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
-			const hashedPassword = bcrypt.hashSync(newPassword)
-			const reEncryptedEmail = encrypt(decryptedEmail, getKey(newPassword, hashedPassword.split("$")[3]), Buffer.from(req.user.iv, "hex"))
-
-			queryDatabase("UPDATE users SET password = ?, email = ? WHERE id = ?;", [hashedPassword, reEncryptedEmail, userId])
 			.then(() => {
 				return res.json({ status: "success" })
 			})
 			.catch(err => {
 				return res.json({ status: "fail", message: err })
 			})
-		})
-		.catch(err => {
-			return res.json({ status: "fail", message: err })
-		})
+	} else {
+		if (!bcrypt.compareSync(currentPassword, req.user.password)) return res.status(400).json({ status: "fail", message: "Incorrect password" })
+
+		queryDatabase("SELECT email FROM users WHERE id = ?;", [userId])
+			.then(result => {
+				const email = result[0].email
+				const decryptedEmail = decrypt(email, getKey(currentPassword, req.user.password.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+				const hashedPassword = bcrypt.hashSync(newPassword)
+				const reEncryptedEmail = encrypt(decryptedEmail, getKey(newPassword, hashedPassword.split("$")[3]), Buffer.from(req.user.iv, "hex"))
+
+				queryDatabase("UPDATE users SET password = ?, email = ? WHERE id = ?;", [hashedPassword, reEncryptedEmail, userId])
+					.then(() => {
+						return res.json({ status: "success" })
+					})
+					.catch(err => {
+						return res.json({ status: "fail", message: err })
+					})
+			})
+			.catch(err => {
+				return res.json({ status: "fail", message: err })
+			})
 	}
 })
 
 app.get("/api/get_attendance", isAuthenticated, (req, res) => {
 	queryDatabase("SELECT attendance_datetime, status, remarks, iv FROM attendance WHERE user_id = ?;", [req.user.id])
-	.then(result => {
-		if (result.length === 0) return res.json({ status: "success", data: [] })
+		.then(result => {
+			if (result.length === 0) return res.json({ status: "success", data: [] })
 
-		result.forEach(attendance => {
-			attendance.attendance_datetime = decrypt(attendance.attendance_datetime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
-			attendance.attendance_datetime = attendance.attendance_datetime.split("T")[0]
-			attendance.status = decrypt(attendance.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
-			attendance.remarks = attendance.remarks === null ? "" : decrypt(attendance.remarks, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+			result.forEach(attendance => {
+				attendance.attendance_datetime = decrypt(attendance.attendance_datetime, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+				attendance.attendance_datetime = attendance.attendance_datetime.split("T")[0]
+				attendance.status = decrypt(attendance.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+				attendance.remarks = attendance.remarks === null ? "" : decrypt(attendance.remarks, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(attendance.iv, "hex"))
+			})
+
+			return res.json({ status: "success", data: result })
 		})
-
-		return res.json({ status: "success", data: result })
-	})
-	.catch(err => {
-		return res.json({ status: "fail", message: err })
-	})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
 })
 
 app.get("/api/get_forms", isAuthenticated, (req, res) => {
 	queryDatabase("SELECT start_date, end_date, status, iv FROM forms_new WHERE user_id = ?;", [req.user.id])
-	.then(result => {
-		if (result.length === 0) return res.json({ status: "success", data: [] })
+		.then(result => {
+			if (result.length === 0) return res.json({ status: "success", data: [] })
 
-		result.forEach(form => {
-			form.start_date = decrypt(form.start_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
-			form.start_date = form.start_date.split("T")[0]
-			form.end_date = decrypt(form.end_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
-			form.end_date = form.end_date.split("T")[0]
-			form.status = decrypt(form.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+			result.forEach(form => {
+				form.start_date = decrypt(form.start_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+				form.start_date = form.start_date.split("T")[0]
+				form.end_date = decrypt(form.end_date, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+				form.end_date = form.end_date.split("T")[0]
+				form.status = decrypt(form.status, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(form.iv, "hex"))
+			})
+
+			return res.json({ status: "success", data: result })
 		})
+		.catch(err => {
+			return res.json({ status: "fail", message: err })
+		})
+})
 
-		return res.json({ status: "success", data: result })
-	})
-	.catch(err => {
+async function decryptUserImage(user_image, iv) {
+	return new Promise((resolve, reject) => {
+		const image = user_image;
+
+		image(function (err, _, e) {
+			if (err) {
+				return reject("Error retrieving image");
+			}
+
+			let buffers = [];
+			e.on('data', function (chunk) {
+				buffers.push(chunk);
+			});
+
+			e.on('end', function () {
+				let buffer = Buffer.concat(buffers);
+				try {
+					const key = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
+					const ivBuffer = Buffer.from(iv, 'hex');
+					const decryptedImageBuffer = decryptImage(buffer, key, ivBuffer);
+					resolve(decryptedImageBuffer);
+				} catch (decryptionError) {
+					console.error('Decryption failed:', decryptionError.message);
+					reject('Decryption failed');
+				}
+			});
+		});
+	});
+}
+
+app.get("/api/get_users", isAuthenticated, async (req, res) => {
+	try {
+		const result = await queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) AS user_image, id, username, account_type, iv FROM users;")
+
+		let students = []
+		let lecturers = []
+
+		for (const user of result) {
+			const imageBuffer = await decryptUserImage(user.user_image, req.user.iv);
+			const webpBuffer = await sharp(imageBuffer).toFormat('webp').toBuffer();
+			user.user_image = webpBuffer;
+
+			const accountType = decrypt(user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(user.iv, "hex"))
+			user.account_type = accountType
+			if (accountType.toLowerCase() === "student") {
+				students.push(user)
+			} else if (accountType.toLowerCase() === "lecturer") {
+				lecturers.push(user)
+			}
+		}
+
+		return res.json({ status: "success", data: { students: students, lecturers: lecturers } })
+	} catch (err) {
 		return res.json({ status: "fail", message: err })
-	})
+	}
 })
 
 if (process.env.NODE_ENV !== "test") {

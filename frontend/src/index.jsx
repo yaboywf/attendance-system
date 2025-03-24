@@ -12,6 +12,7 @@ import HelpPage from './javascript/HelpPage';
 import ErrorStack from "./javascript/Errors";
 import ResetPasswordPage from "./javascript/ResetPasswordPage";
 import MyAttendance from './javascript/MyAttendance';
+import StudentManagement from './javascript/StudentManagement';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -24,6 +25,7 @@ import './styles/ProfilePage.scss'
 import './styles/HelpPage.scss'
 import './styles/ResetPasswordPage.scss'
 import './styles/MyAttendance.scss'
+import './styles/StudentManagement.scss'
 
 const container = document.body;
 const root = createRoot(container);
@@ -42,6 +44,7 @@ root.render(
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route path="/terms" element={<HelpPage />} />
+                    <Route path="/student_management" element={<StudentManagement />} />
                     <Route path="/forget_password/verify/:resetId" element={<ResetPasswordPage />} />
                 </Route>
             </Routes>
