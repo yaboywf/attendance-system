@@ -13,7 +13,6 @@ const options = {
     WireCrypt: process.env.FIREBIRD_WIRECRYPT,
 };
 
-// Create a pool of 5 connections
 const pool = Firebird.pool(5, options);
 
 function queryDatabase(sql, params = []) {
@@ -56,5 +55,7 @@ function queryDatabase(sql, params = []) {
         });
     });
 }
+
+queryDatabase("SELECT * from users;")
 
 module.exports = queryDatabase;

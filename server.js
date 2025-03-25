@@ -513,13 +513,12 @@ app.post("/api/verify/:resetId", (req, res) => {
 app.put("/api/reset_password", (req, res) => {
 	const newPassword = req.body.password
 	const confirmPassword = req.body.confirm
-	console.log(req.body)
 	const userId = req.body.user_id || req.user.id
 	const currentPassword = req.session.enteredPassword || null
 
-	if (!newPassword || newPassword === "") return res.status(400).json({ status: "fail", message: "Password cannot be empty" })
-	if (!confirmPassword || confirmPassword === "") return res.status(400).json({ status: "fail", message: "Confirm Password cannot be empty" })
-	if (newPassword !== confirmPassword) return res.status(400).json({ status: "fail", message: "Passwords do not match" })
+	if (!newPassword || newPassword === "") return res.status(422).json({ status: "fail", message: "Password cannot be empty" })
+	if (!confirmPassword || confirmPassword === "") return res.status(422).json({ status: "fail", message: "Confirm Password cannot be empty" })
+	if (newPassword !== confirmPassword) return res.status(422).json({ status: "fail", message: "Passwords do not match" })
 
 	if (!currentPassword) {
 		queryDatabase("UPDATE users SET password = ?, email = '', hashed_email = '' WHERE id = ?;", [bcrypt.hashSync(newPassword), userId])
@@ -622,7 +621,7 @@ async function decryptUserImage(user_image, iv) {
 	});
 }
 
-app.get("/api/get_users", isAuthenticated, async (req, res) => {
+app.get("/api/get_users", async (req, res) => {
 	try {
 		const result = await queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) AS user_image, id, username, account_type, iv FROM users;")
 
@@ -630,23 +629,62 @@ app.get("/api/get_users", isAuthenticated, async (req, res) => {
 		let lecturers = []
 
 		for (const user of result) {
-			const imageBuffer = await decryptUserImage(user.user_image, req.user.iv);
-			const webpBuffer = await sharp(imageBuffer).toFormat('webp').toBuffer();
-			user.user_image = webpBuffer;
+			try {
+				const imageBuffer = await decryptUserImage(user.user_image, user.iv);
+				console.log(imageBuffer)
+				console.log(await sharp(imageBuffer).metadata())
+				const webpBuffer = await sharp(imageBuffer).toFormat('webp').toBuffer();
+				console.log("d")
+				user.user_image = webpBuffer;
 
-			const accountType = decrypt(user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(user.iv, "hex"))
-			user.account_type = accountType
-			if (accountType.toLowerCase() === "student") {
-				students.push(user)
-			} else if (accountType.toLowerCase() === "lecturer") {
-				lecturers.push(user)
+				const accountType = decrypt(user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(user.iv, "hex"))
+				user.account_type = accountType
+				if (accountType.toLowerCase() === "student") {
+					students.push(user)
+				} else if (accountType.toLowerCase() === "lecturer") {
+					lecturers.push(user)
+				}
+			} catch(err) {
+				console.error(err)
 			}
 		}
+
+		console.log({ students: students, lecturers: lecturers })
 
 		return res.json({ status: "success", data: { students: students, lecturers: lecturers } })
 	} catch (err) {
 		return res.json({ status: "fail", message: err })
 	}
+})	
+
+app.post("/api/create_user", isAuthenticated, (req, res) => {
+	const { username, password, account_type, user_image } = req.body;
+
+	if (!["student", "lecturer"].includes(account_type.toLowerCase())) return res.status(422).json({ status: "fail", message: "Invalid account type" })
+
+	const base64Data = user_image.replace(user_image.match(/^data:(image\/(jpeg|jpg|webp|png));base64,/)[0], '');
+	const fileBuffer = Buffer.from(base64Data, 'base64');
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+	const encryptionIv = createIv()
+
+	const encryptedFile = encryptImage(fileBuffer, encryptionKey, encryptionIv)
+	const hashedPassword = bcrypt.hashSync(password, 10)
+	const encryptedAccountType = encrypt(user_image.toLowerCase(), encryptionKey, encryptionIv)
+
+	queryDatabase("SELECT COALESCE(MAX(id), 0) FROM users;")
+	.then(result => {
+		const newId = result[0].coalesce + 1
+		queryDatabase("INSERT INTO users(id, username, password, account_type, user_image, iv) VALUES(?, ?, ?, ?, ?, ?)", [newId, username, hashedPassword, encryptedAccountType, encryptedFile, encryptionIv.toString('hex')])
+		.then(() => {
+			res.json({ status: "success", message: "User created successfully" })
+		})
+		.catch(err => {
+			res.status(500).json({ status: "fail", message: err })
+		})
+	})
+	.catch(err => {
+		res.status(500).json({ status: "fail", message: err })
+	})
 })
 
 if (process.env.NODE_ENV !== "test") {
