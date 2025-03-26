@@ -729,6 +729,27 @@ app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
 	}
 })
 
+app.get("/api/get_all_attendance", (req, res) => {
+	queryDatabase("SELECT attendance.id, attendance_datetime, attendance.iv, status, updated_datetime, username FROM attendance JOIN users ON users.id = attendance.user_id;")
+	.then(result => {
+		let data = []
+
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+
+			row.attendance_datetime = decrypt(row.attendance_datetime, encryptionKey, encryptionIv)
+			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+			row.updated_datetime = decrypt(row.updated_datetime, encryptionKey, encryptionIv)
+		})
+		res.json({ status: "success", data: result})
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {

@@ -1,0 +1,74 @@
+.student-attendance {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    width: 100%;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    > section:first-of-type {
+        position: sticky;
+        top: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 5px 0;
+
+        input {
+            padding: 5px 10px;
+            border: none;
+            width: 200px;
+            border-radius: 0px;
+            border-bottom: 1px solid black;
+            outline: none;
+            background: none;
+        }
+
+        label i {
+            margin-right: 5px;
+        }
+    }
+
+    > section:nth-of-type(2) {
+        display: grid;
+        grid-template-columns: max-content 1fr 1fr 1fr max-content 70px;
+        align-items: center;
+        border: 1px solid black;
+        border-radius: 10px;
+
+        div {
+            display: contents;
+
+            > p:first-of-type, > p:nth-last-of-type(-n+2) {
+                text-align: center;
+            }
+
+            i {
+                cursor: pointer;
+            }
+        }
+
+        > p:first-of-type, > p:nth-last-of-type(-n+2) {
+            text-align: center;
+        }
+
+        p {
+            padding: 5px 10px;
+            border-bottom: 1px solid black;
+        }
+
+        p:not(:last-of-type) {
+            border-right: 1px solid black;
+        }
+
+        div:last-of-type > p {
+            border-bottom: none;
+        }
+    }
+}
