@@ -113,7 +113,7 @@ function StudentManagement() {
                 user_image: fileBlob
             }
 
-            axios.post(`http://127.0.0.1:3000/api/create_user`, formData, { headers: { 'Content-Type': 'application/json' }, withCredentials: true })
+            axios.post('http://127.0.0.1:3000/api/create_user', formData, { headers: { 'Content-Type': 'application/json' }, withCredentials: true })
             .then(resp => {
                 if (resp.data.status === "success") {
                     addError(resp.data.message, "success");
@@ -186,6 +186,39 @@ function StudentManagement() {
         }
     }
 
+    const handleDelete = () => {
+        const isConfirmed = window.confirm("Are you sure you want to delete this user?");
+
+        if (isConfirmed) {
+            const user = selectedUser.id
+
+            axios.delete('http://127.0.0.1:3000/api/delete_user', {
+                params: { user: user },
+                headers: { 'Content-Type': 'application/json' },
+                withCredentials: true
+            })
+            .then(resp => {
+                if (resp.data.status === "success") {
+                    addError(resp.data.message, "success")
+                }
+            })
+            .catch(err => {
+                addError("Something went wrong when trying to submit this form");
+                console.error(err);
+            })
+        } else {
+            return
+        }
+    }
+
+    const filter = (e) => {
+        const search = e.target.value.toLowerCase()
+        Array.from(document.getElementsByClassName("user")).map(user => {
+            const username = user.querySelector("p").textContent.toLowerCase()
+            user.style.display = username.includes(search) ? "flex" : "none";
+        })
+    }
+
     const selectUser = (event) => {
         const userId = event.currentTarget.getAttribute("data-id");
         const user = users.students.find(user => user.id === parseInt(userId)) || users.lecturers.find(user => user.id === parseInt(userId));
@@ -206,7 +239,7 @@ function StudentManagement() {
                     <i className="fa-solid fa-magnifying-glass"></i>
                     Search:
                 </label>
-                <input type="search" name="search" id="search" placeholder="Search for a student" autoComplete="off" />
+                <input type="search" name="search" id="search" placeholder="Search for a student" autoComplete="off" onInput={(e) => filter(e)} />
 
                 <button onClick={setCreate}>Create New Student</button>
             </section>
@@ -281,7 +314,7 @@ function StudentManagement() {
 
                     <div>
                         <button type="submit">{formType === "create" ? "Create" : "Update"}</button>
-                        {formType === "update" && <button type="button">Delete</button>}
+                        {formType === "update" && <button type="button" onClick={handleDelete}>Delete</button>}
                     </div>
                 </form>
             </div>}

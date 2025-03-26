@@ -621,6 +621,8 @@ async function decryptUserImage(user_image, iv) {
 }
 
 app.get("/api/get_users", async (req, res) => {
+	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
+
 	try {
 		const result = await queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) AS user_image, id, username, account_type, iv FROM users;")
 
@@ -652,6 +654,8 @@ app.get("/api/get_users", async (req, res) => {
 })	
 
 app.post("/api/create_user", isAuthenticated, (req, res) => {
+	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
+
 	const { username, password, account_type, user_image } = req.body;
 
 	if (!["student", "lecturer"].includes(account_type.toLowerCase())) return res.status(422).json({ status: "fail", message: "Invalid account type" })
@@ -670,7 +674,7 @@ app.post("/api/create_user", isAuthenticated, (req, res) => {
 		const newId = result[0].coalesce + 1
 		queryDatabase("INSERT INTO users(id, username, password, account_type, user_image, iv) VALUES(?, ?, ?, ?, ?, ?)", [newId, username, hashedPassword, encryptedAccountType, encryptedFile, encryptionIv.toString('hex')])
 		.then(() => {
-			res.json({ status: "success", message: "User created successfully" })
+			res.json({ status: "success", message: "User created successfully. Reload to view changes." })
 		})
 		.catch(err => {
 			res.status(500).json({ status: "fail", message: err })
@@ -682,6 +686,8 @@ app.post("/api/create_user", isAuthenticated, (req, res) => {
 })
 
 app.put("/api/update_user", isAuthenticated, (req, res) => {
+	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
+
 	const { user_id, username, account_type, user_image } = req.body;
 	console.log(req.body)
 
@@ -707,12 +713,30 @@ app.put("/api/update_user", isAuthenticated, (req, res) => {
 
 		queryDatabase(sql, parameters)
 		.then(() => {
-			res.json({ status: "success", message: "User updated successfully. Reload to see changes." })
+			res.json({ status: "success", message: "User updated successfully. Reload to view changes." })
 		})
 		.catch(err => {
 			res.status(500).json({ status: "fail", message: err })
 		})
 	})
+})
+
+app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
+	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
+
+	const user = req.query.user
+	console.log(user)
+
+	try {
+		await queryDatabase("DELETE FROM forms_new WHERE user_id = ?;", [user])
+		await queryDatabase("DELETE FROM attendance WHERE user_id = ?;", [user])
+		await queryDatabase("DELETE FROM resets WHERE user_id = ?;", [user])
+		await queryDatabase("DELETE FROM users WHERE id = ?;", [user])
+		res.json({ status: "success", message: "User deleted successfully. Reload to view changes."})
+	} catch (err) {
+		console.error(err)
+		res.json({ status: "fail" })
+	}
 })
 
 if (process.env.NODE_ENV !== "test") {

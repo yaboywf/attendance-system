@@ -44,7 +44,7 @@ root.render(
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route path="/terms" element={<HelpPage />} />
-                    <Route path="/student_management" element={<StudentManagement />} />
+                    <Route path="/user_management" element={<StudentManagement />} />
                     <Route path="/forget_password/verify/:resetId" element={<ResetPasswordPage />} />
                 </Route>
             </Routes>
