@@ -1,0 +1,22 @@
+.not-found {
+    padding: 20px;
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    flex-direction: column;
+    flex: 1;
+    gap: 20px;
+    align-items: center;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    p {
+        font-size: 18px;
+    }
+}
