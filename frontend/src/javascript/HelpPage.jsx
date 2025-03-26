@@ -54,6 +54,14 @@ function HelpPage() {
                         <i className="fa-solid fa-xmark"></i>
                     </p>
 
+                    <p>My Attendance</p>
+                    <p>
+                        <i className="fa-solid fa-check"></i>
+                    </p>
+                    <p>
+                        <i className="fa-solid fa-xmark"></i>
+                    </p>
+
                     <p>Home / Dashboard (Lecturer View)</p>
                     <p>
                         <i className="fa-solid fa-xmark"></i>

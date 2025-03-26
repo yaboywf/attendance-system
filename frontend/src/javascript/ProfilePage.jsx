@@ -112,7 +112,7 @@ function ProfilePage() {
                     <p>{user?.username || "User"}</p>
 
                     <p>Email:</p>
-                    <p>{user?.email || "Email"}</p>
+                    <p>{user?.email || "-"}</p>
                     
                     <p>Account Type:</p>
                     <p>{capitalize(user?.account_type || "") || "Account Type"}</p>

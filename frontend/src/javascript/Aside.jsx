@@ -65,6 +65,7 @@ function Aside({ user }) {
                 </div>
                 
                 <div>
+                    {user?.user?.account_type?.toLowerCase() === "student" && <>
                     <button data-active={page === "home"} onClick={() => goToPage("/dashboard") }>
                         <i className="fa-solid fa-house"></i>
                         Home
@@ -85,6 +86,15 @@ function Aside({ user }) {
                         <i className="fa-solid fa-clipboard-user"></i>
                         My Attendance
                     </button>
+                    </>}
+                    
+                    {user?.user?.account_type?.toLowerCase() === "lecturer" && <>
+                        <button data-active={page === "usermanagement"} onClick={() => goToPage("/user_management") }>
+                        <i className="fa-solid fa-users"></i>
+                        User Management
+                    </button>
+                    </>}
+                    
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>
                         My Profile
