@@ -435,16 +435,15 @@ app.post("/api/forget_password", (req, res) => {
 		.then(result => {
 			let requestedUser = null;
 			result.forEach(user => {
-				console.log(email, user.hashed_email)
 				if (bcrypt.compareSync(email, user.hashed_email)) {
 					requestedUser = user.id;
 					queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
-						.then(() => {
-							const mailOptions = {
-								from: process.env.EMAIL_ADDRESS,
-								to: email,
-								subject: "AttendEase - Password Reset",
-								text: `
+					.then(() => {
+						const mailOptions = {
+							from: process.env.EMAIL_ADDRESS,
+							to: email,
+							subject: "AttendEase - Password Reset",
+							text: `
 Hello ${email},
 
 You have requested to reset your password for AttendEase. Please click the following link to reset your password:
@@ -462,7 +461,7 @@ AttendEase
 
 							transporter.sendMail(mailOptions, (error) => {
 								if (error) {
-									console.log('Error sending email:', error);
+									console.error('Error sending email:', error);
 								}
 
 								return res.json({ status: "success" })
@@ -631,10 +630,7 @@ app.get("/api/get_users", async (req, res) => {
 		for (const user of result) {
 			try {
 				const imageBuffer = await decryptUserImage(user.user_image, user.iv);
-				console.log(imageBuffer)
-				console.log(await sharp(imageBuffer).metadata())
 				const webpBuffer = await sharp(imageBuffer).toFormat('webp').toBuffer();
-				console.log("d")
 				user.user_image = webpBuffer;
 
 				const accountType = decrypt(user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(user.iv, "hex"))
@@ -648,8 +644,6 @@ app.get("/api/get_users", async (req, res) => {
 				console.error(err)
 			}
 		}
-
-		console.log({ students: students, lecturers: lecturers })
 
 		return res.json({ status: "success", data: { students: students, lecturers: lecturers } })
 	} catch (err) {
@@ -669,7 +663,7 @@ app.post("/api/create_user", isAuthenticated, (req, res) => {
 
 	const encryptedFile = encryptImage(fileBuffer, encryptionKey, encryptionIv)
 	const hashedPassword = bcrypt.hashSync(password, 10)
-	const encryptedAccountType = encrypt(user_image.toLowerCase(), encryptionKey, encryptionIv)
+	const encryptedAccountType = encrypt(account_type.toLowerCase(), encryptionKey, encryptionIv)
 
 	queryDatabase("SELECT COALESCE(MAX(id), 0) FROM users;")
 	.then(result => {
@@ -684,6 +678,40 @@ app.post("/api/create_user", isAuthenticated, (req, res) => {
 	})
 	.catch(err => {
 		res.status(500).json({ status: "fail", message: err })
+	})
+})
+
+app.put("/api/update_user", isAuthenticated, (req, res) => {
+	const { user_id, username, account_type, user_image } = req.body;
+	console.log(req.body)
+
+	if (["user_id", "username", "account_type"].filter(field => !req.body.hasOwnProperty(field)).length > 0) return res.status(422).json({ status: "fail", message: 'Missing required keys.'});
+	if (!user_id || !username || !account_type) return res.status(422).json({ status: "fail", message: "Fields cannot be empty" })
+
+	let sql = "UPDATE users SET username = ?, account_type = ? WHERE id = ?;"
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+
+	queryDatabase("SELECT iv FROM users WHERE id = ?", [user_id])
+	.then(result => {
+		const encryptionIv = Buffer.from(result[0].iv, "hex")
+		const encryptedAccountType = encrypt(account_type.toLowerCase(), encryptionKey, encryptionIv)
+		let parameters = [username, encryptedAccountType, user_id]
+		
+		if (!!user_image) {
+			const base64Data = user_image.replace(user_image.match(/^data:(image\/(jpeg|jpg|webp|png));base64,/)[0], '');
+			const fileBuffer = Buffer.from(base64Data, 'base64');
+			const encryptedFile = encryptImage(fileBuffer, encryptionKey, encryptionIv)
+			sql = "UPDATE users SET username = ?, account_type = ?, user_image = ? WHERE id = ?;"
+			parameters = [username, encryptedAccountType, encryptedFile, user_id]
+		}
+
+		queryDatabase(sql, parameters)
+		.then(() => {
+			res.json({ status: "success", message: "User updated successfully. Reload to see changes." })
+		})
+		.catch(err => {
+			res.status(500).json({ status: "fail", message: err })
+		})
 	})
 })
 
