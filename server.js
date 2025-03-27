@@ -730,7 +730,7 @@ app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
 })
 
 app.get("/api/get_all_attendance", (req, res) => {
-	queryDatabase("SELECT attendance.id, attendance_datetime, attendance.iv, status, updated_datetime, username FROM attendance JOIN users ON users.id = attendance.user_id;")
+	queryDatabase("SELECT attendance.id, attendance_datetime, attendance.iv, status, remarks, updated_datetime, username FROM attendance JOIN users ON users.id = attendance.user_id;")
 	.then(result => {
 		let data = []
 
@@ -740,9 +740,34 @@ app.get("/api/get_all_attendance", (req, res) => {
 
 			row.attendance_datetime = decrypt(row.attendance_datetime, encryptionKey, encryptionIv)
 			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+			row.remarks = row.remarks === null ? "" : decrypt(row.remarks, encryptionKey, encryptionIv)
 			row.updated_datetime = decrypt(row.updated_datetime, encryptionKey, encryptionIv)
 		})
 		res.json({ status: "success", data: result})
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
+app.put("/api/update_attendance/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+	const { status, remarks, iv } = req.body
+
+	if (["status", "remarks"].filter(field => !req.body.hasOwnProperty(field)).length > 0) return res.status(422).json({ status: "fail", message: 'Missing required keys.'});
+	if (!status) return res.status(422).json({ status: "fail", message: "Fields cannot be empty" })
+	if (!["1", "0", "S", "E"].includes(status)) return res.status(422).json({ status: "fail", message: "Invalid status" })
+
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+	const encryptionIv = Buffer.from(iv, "hex")
+
+	const encryptedStatus = encrypt(status, encryptionKey, encryptionIv)
+	const encryptedRemarks = remarks === "" ? null : encrypt(remarks, encryptionKey, encryptionIv)
+
+	queryDatabase("UPDATE attendance SET status = ?, remarks = ? WHERE id = ?", [encryptedStatus, encryptedRemarks, id])
+	.then(() => {
+		res.json({ status: "success" })
 	})
 	.catch(err => {
 		console.error(err)

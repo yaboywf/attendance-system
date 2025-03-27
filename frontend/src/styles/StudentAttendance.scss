@@ -54,6 +54,10 @@
             }
         }
 
+        > p {
+            font-weight: bold;
+        }
+
         > p:first-of-type, > p:nth-last-of-type(-n+2) {
             text-align: center;
         }
@@ -69,6 +73,108 @@
 
         div:last-of-type > p {
             border-bottom: none;
+        }
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2;
+
+        > form {
+            background: white;
+            border: 1px solid black;
+            width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            display: grid;
+            align-items: center;
+            grid-template-columns: 150px 1fr;
+            gap: 20px;
+            position: relative;
+
+            h2 {
+                font-size: 20px;
+                grid-column: span 2;
+            }
+
+            input, select, textarea {
+                padding: 5px 10px;
+                border: none;
+                border-radius: 0px;
+                border-bottom: 1px solid black;
+                outline: none;
+                resize: none;
+                background: none;
+            }
+
+            select {
+                cursor: pointer;
+            }
+
+            textarea {
+                padding: 15px;
+                border: 1px solid black;
+                grid-column: span 2;
+                height: 150px;
+                border-radius: 10px;
+            }
+
+            input:disabled {
+                cursor: not-allowed;
+            }
+
+            label:nth-of-type(4) {
+                grid-column: span 2;
+            }
+
+            > .fa-xmark {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                cursor: pointer;
+                font-size: 20px;
+            }
+
+            div {
+                width: 100%;
+                grid-column: span 2;
+                gap: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            button {
+                grid-column: span 2;
+                border: none;
+                outline: none;
+                background: black;
+                color: white;
+                padding: 5px 20px;
+                border-radius: 10px;
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            div:last-of-type {
+                width: 100%;
+                grid-column: span 2;
+                gap: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
         }
     }
 }

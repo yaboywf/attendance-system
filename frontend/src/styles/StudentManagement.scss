@@ -303,6 +303,10 @@
                 background: none;
             }
 
+            select {
+                cursor: pointer;
+            }
+
             input[type='file'] {
                 display: none;
             }
