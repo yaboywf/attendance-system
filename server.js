@@ -732,8 +732,6 @@ app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
 app.get("/api/get_all_attendance", (req, res) => {
 	queryDatabase("SELECT attendance.id, attendance_datetime, attendance.iv, status, remarks, updated_datetime, username FROM attendance JOIN users ON users.id = attendance.user_id;")
 	.then(result => {
-		let data = []
-
 		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 		result.forEach(row => {
 			const encryptionIv = Buffer.from(row.iv, "hex")
@@ -743,6 +741,7 @@ app.get("/api/get_all_attendance", (req, res) => {
 			row.remarks = row.remarks === null ? "" : decrypt(row.remarks, encryptionKey, encryptionIv)
 			row.updated_datetime = decrypt(row.updated_datetime, encryptionKey, encryptionIv)
 		})
+
 		res.json({ status: "success", data: result})
 	})
 	.catch(err => {
@@ -781,6 +780,28 @@ app.delete("/api/delete_attendance/:id", isAuthenticated, (req, res) => {
 	queryDatabase("DELETE FROM attendance WHERE id = ?", [id])
 	.then(() => {
 		res.json({ status: "success" })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
+app.get("/api/get_all_forms", (req, res) => {
+	queryDatabase("SELECT * FROM forms_new;")
+	.then(result => {
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+
+			row.start_date = decrypt(row.start_date, encryptionKey, encryptionIv)
+			row.end_date = decrypt(row.end_date, encryptionKey, encryptionIv)
+			row.reason = row.reason === null ? "" : decrypt(row.reason, encryptionKey, encryptionIv)
+			row.form_type = decrypt(row.form_type, encryptionKey, encryptionIv)
+			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+		})
+
+		res.json({ status: "success", data: result })
 	})
 	.catch(err => {
 		console.error(err)
