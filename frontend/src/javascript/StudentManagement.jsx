@@ -14,8 +14,8 @@ function StudentManagement() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [newImage, setNewImage] = useState(null);
 
-    if (user?.account_type?.toLowerCase() !== "educator") {
-        // window.location.href = "/dashboard";
+    if (user?.account_type?.toLowerCase() !== "lecturer") {
+        window.location.href = "/dashboard";
     }
 
     useEffect(() => {
@@ -232,7 +232,7 @@ function StudentManagement() {
 
     return (
         <div className="student-management">
-            <h1>Student Management</h1>
+            <h1>User Management</h1>
 
             <section>
                 <label htmlFor="search">

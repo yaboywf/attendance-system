@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types'
 import axios from "axios";
 import { useError } from "./ErrorContext";
-import { useNavigate } from "react-router-dom";
 
 function Aside({ user }) {
     const [page, setPage] = useState("home");
     const { addError } = useError()
-    const navigate = useNavigate();
     const [userImage, setUserImage] = useState(null)
 
     useEffect(() => {
@@ -32,6 +30,10 @@ function Aside({ user }) {
             setPage("attendance");
         } else if (path === "/my_attendance") {
             setPage("myattendance");
+        } else if (path === "/user_management") {
+            setPage("usermanagement");
+        } else if (path === "/student_attendance") {
+            setPage("studentattendance");
         } else if (path === "/help") {
             setPage("help");
         } else if (path === "/profile") {
@@ -43,7 +45,7 @@ function Aside({ user }) {
         axios.put("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
         .then(resp => {
             if (resp.data.status === "success") {
-                navigate("/", { replace: true });
+                window.location.href = "/"
             }
         })
         .catch(err => {
@@ -57,7 +59,7 @@ function Aside({ user }) {
     }
 
     return (
-        <aside>
+        user?.user?.username && <aside>
             <section>
                 <div>
                     <img src="attendance-logo.webp" alt="Logo" />
@@ -90,9 +92,13 @@ function Aside({ user }) {
                     
                     {user?.user?.account_type?.toLowerCase() === "lecturer" && <>
                         <button data-active={page === "usermanagement"} onClick={() => goToPage("/user_management") }>
-                        <i className="fa-solid fa-users"></i>
-                        User Management
-                    </button>
+                            <i className="fa-solid fa-users"></i>
+                            User Management
+                        </button>
+                        <button data-active={page === "studentattendance"} onClick={() => goToPage("/student_attendance") }>
+                            <i className="fa-solid fa-clipboard-user"></i>
+                            Student Attendance
+                        </button>
                     </>}
                     
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>

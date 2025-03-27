@@ -206,7 +206,7 @@ function isAuthenticated(req, res, next) {
 
 app.get("/api/get_credentials", isAuthenticated, (req, res) => {
 	const password = req.session.enteredPassword
-	const email = req.user.email === "" ? "" : decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
+	const email = req.user.email === null ? "" : decrypt(req.user.email, getKey(password, req.user.password.split("$")[3]), Buffer.from(req.user.iv, 'hex'))
 	const accountType = decrypt(req.user.account_type, Buffer.from(process.env.ENCRYPTION_KEY, "hex"), Buffer.from(req.user.iv, 'hex'))
 	res.json({ status: "success", user: { username: req.user.username, email: email, account_type: accountType } });
 });
@@ -621,8 +621,6 @@ async function decryptUserImage(user_image, iv) {
 }
 
 app.get("/api/get_users", async (req, res) => {
-	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
-
 	try {
 		const result = await queryDatabase("SELECT cast(user_image as BLOB SUB_TYPE BINARY) AS user_image, id, username, account_type, iv FROM users;")
 
@@ -654,8 +652,6 @@ app.get("/api/get_users", async (req, res) => {
 })	
 
 app.post("/api/create_user", isAuthenticated, (req, res) => {
-	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
-
 	const { username, password, account_type, user_image } = req.body;
 
 	if (!["student", "lecturer"].includes(account_type.toLowerCase())) return res.status(422).json({ status: "fail", message: "Invalid account type" })
@@ -686,10 +682,7 @@ app.post("/api/create_user", isAuthenticated, (req, res) => {
 })
 
 app.put("/api/update_user", isAuthenticated, (req, res) => {
-	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
-
 	const { user_id, username, account_type, user_image } = req.body;
-	console.log(req.body)
 
 	if (["user_id", "username", "account_type"].filter(field => !req.body.hasOwnProperty(field)).length > 0) return res.status(422).json({ status: "fail", message: 'Missing required keys.'});
 	if (!user_id || !username || !account_type) return res.status(422).json({ status: "fail", message: "Fields cannot be empty" })
@@ -722,10 +715,7 @@ app.put("/api/update_user", isAuthenticated, (req, res) => {
 })
 
 app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
-	if (req.user.account_type.toLowerCase() !== "lecturer") return res.status(403).json({ status: "fail", message: "This account type does not have the ability to do this action" })
-
 	const user = req.query.user
-	console.log(user)
 
 	try {
 		await queryDatabase("DELETE FROM forms_new WHERE user_id = ?;", [user])
@@ -737,6 +727,65 @@ app.delete("/api/delete_user", isAuthenticated, async (req, res) => {
 		console.error(err)
 		res.json({ status: "fail" })
 	}
+})
+
+app.get("/api/get_all_attendance", (req, res) => {
+	queryDatabase("SELECT attendance.id, attendance_datetime, attendance.iv, status, remarks, updated_datetime, username FROM attendance JOIN users ON users.id = attendance.user_id;")
+	.then(result => {
+		let data = []
+
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+
+			row.attendance_datetime = decrypt(row.attendance_datetime, encryptionKey, encryptionIv)
+			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+			row.remarks = row.remarks === null ? "" : decrypt(row.remarks, encryptionKey, encryptionIv)
+			row.updated_datetime = decrypt(row.updated_datetime, encryptionKey, encryptionIv)
+		})
+		res.json({ status: "success", data: result})
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
+app.put("/api/update_attendance/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+	const { status, remarks, iv } = req.body
+
+	if (["status", "remarks"].filter(field => !req.body.hasOwnProperty(field)).length > 0) return res.status(422).json({ status: "fail", message: 'Missing required keys.'});
+	if (!status) return res.status(422).json({ status: "fail", message: "Fields cannot be empty" })
+	if (!["1", "0", "S", "E"].includes(status)) return res.status(422).json({ status: "fail", message: "Invalid status" })
+
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+	const encryptionIv = Buffer.from(iv, "hex")
+
+	const encryptedStatus = encrypt(status, encryptionKey, encryptionIv)
+	const encryptedRemarks = remarks === "" ? null : encrypt(remarks, encryptionKey, encryptionIv)
+
+	queryDatabase("UPDATE attendance SET status = ?, remarks = ? WHERE id = ?", [encryptedStatus, encryptedRemarks, id])
+	.then(() => {
+		res.json({ status: "success" })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
+app.delete("/api/delete_attendance/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+
+	queryDatabase("DELETE FROM attendance WHERE id = ?", [id])
+	.then(() => {
+		res.json({ status: "success" })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
 })
 
 if (process.env.NODE_ENV !== "test") {

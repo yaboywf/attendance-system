@@ -56,6 +56,4 @@ function queryDatabase(sql, params = []) {
     });
 }
 
-queryDatabase("SELECT * from users;")
-
 module.exports = queryDatabase;
