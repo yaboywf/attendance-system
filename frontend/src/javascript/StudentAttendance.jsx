@@ -93,8 +93,25 @@ function StudentAttendance() {
         })
     }
 
-    const handleDelete = (e) => {
-        e.preventDefault();
+    const handleDelete = () => {
+        const isConfirmed = window.confirm("Are you sure you want to delete this user?");
+
+        if (isConfirmed) {
+            const attendanceId = selectedAttendance.id
+
+            axios.delete(`http://127.0.0.1:3000/api/delete_attendance/${attendanceId}`, { headers: { "Content-Type": "application/json" }, withCredentials: true })
+            .then(resp => {
+                if (resp.data.status === "success") {
+                    addError("Attendance Deleted. Reload to see changes.", "success")
+                    setOverlay(false);
+                    setSelectedAttendance(null);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                addError("Something went wrong when trying to delete attendance")
+            })
+        }
     }
 
     return (
@@ -119,7 +136,7 @@ function StudentAttendance() {
 
                 {attendances?.map((attendance, index) => (
                     <div key={index} className="row">
-                        <p>{index}</p>
+                        <p>{index + 1}</p>
                         <p>{attendance?.username}</p>
                         <p>{attendance?.attendance_datetime}</p>
                         <p>{attendance?.updated_datetime}</p>

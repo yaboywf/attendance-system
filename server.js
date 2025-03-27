@@ -775,6 +775,19 @@ app.put("/api/update_attendance/:id", isAuthenticated, (req, res) => {
 	})
 })
 
+app.delete("/api/delete_attendance/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+
+	queryDatabase("DELETE FROM attendance WHERE id = ?", [id])
+	.then(() => {
+		res.json({ status: "success" })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {
