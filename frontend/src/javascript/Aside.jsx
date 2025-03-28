@@ -4,7 +4,7 @@ import axios from "axios";
 import { useError } from "./ErrorContext";
 
 function Aside({ user }) {
-    const [page, setPage] = useState("home");
+    const [page, setPage] = useState("dashboard");
     const { addError } = useError()
     const [userImage, setUserImage] = useState(null)
 
@@ -22,25 +22,8 @@ function Aside({ user }) {
 
     useEffect(() => {
         const path = window.location.pathname;
-        if (path === "/dashboard") {
-            setPage("home");
-        } else if (path === "/forms") {
-            setPage("submit");
-        } else if (path === "/attendance") {
-            setPage("attendance");
-        } else if (path === "/my_attendance") {
-            setPage("myattendance");
-        } else if (path === "/user_management") {
-            setPage("usermanagement");
-        } else if (path === "/student_attendance") {
-            setPage("studentattendance");
-        } else if (path === "/approve") {
-            setPage("approve");
-        } else if (path === "/help") {
-            setPage("help");
-        } else if (path === "/profile") {
-            setPage("profile");
-        }
+        const new_path = path.replace("/", "").replace("_", "");
+        setPage(new_path);
     }, []);
 
     const logout = () => {
@@ -70,11 +53,11 @@ function Aside({ user }) {
                 
                 <div>
                     {user?.user?.account_type?.toLowerCase() === "student" && <>
-                    <button data-active={page === "home"} onClick={() => goToPage("/dashboard") }>
+                    <button data-active={page === "dashboard"} onClick={() => goToPage("/dashboard") }>
                         <i className="fa-solid fa-house"></i>
                         Home
                     </button>
-                    <button data-active={page === "submit"} onClick={() => goToPage("/forms") }>
+                    <button data-active={page === "forms"} onClick={() => goToPage("/forms") }>
                         <i className="fa-solid fa-file"></i>
                         Submit MC / LOA
                     </button>
@@ -89,6 +72,10 @@ function Aside({ user }) {
                     <button data-active={page === "myattendance"} onClick={() => goToPage("/my_attendance") }>
                         <i className="fa-solid fa-clipboard-user"></i>
                         My Attendance
+                    </button>
+                    <button data-active={page === "myforms"} onClick={() => goToPage("/my_forms") }>
+                        <i className="fa-solid fa-file-invoice"></i>
+                        My MC / LOA
                     </button>
                     </>}
                     

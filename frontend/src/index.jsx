@@ -16,6 +16,7 @@ import StudentManagement from './javascript/StudentManagement';
 import PageNotFound from './javascript/PageNotFound';
 import StudentAttendance from './javascript/StudentAttendance';
 import Approval from './javascript/Approval';
+import MyForms from './javascript/MyForms';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -28,6 +29,7 @@ import './styles/ProfilePage.scss'
 import './styles/HelpPage.scss'
 import './styles/ResetPasswordPage.scss'
 import './styles/MyAttendance.scss'
+import './styles/MyForms.scss'
 import './styles/StudentManagement.scss'
 import './styles/PageNotFound.scss'
 import './styles/StudentAttendance.scss'
@@ -54,6 +56,7 @@ root.render(
                     <Route path="/forget_password/verify/:resetId" element={<ResetPasswordPage />} />
                     <Route path="/student_attendance" element={<StudentAttendance />} />
                     <Route path="/approve" element={<Approval />} />
+                    <Route path="/my_forms" element={<MyForms />} />
 
                     <Route path="*" element={<PageNotFound />} />
                 </Route>

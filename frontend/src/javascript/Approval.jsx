@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useError } from "./ErrorContext";
+import { useOutletContext } from 'react-router-dom';
 
 function Approval() {
     const { addError } = useError();
+    const { user } = useOutletContext();
     const [forms, setForms] = useState([]);
     const [overlay, setOverlay] = useState(false);
     const [selectedForm, setSelectedForm] = useState(null);
     const [overallAttendance, setOverallAttendance] = useState({ "pending": 0, "approved": 0, "rejected": 0 });
+
+    if (user?.account_type?.toLowerCase() !== "lecturer") {
+        window.location.href = "/dashboard";
+    }
 
     useEffect(() => {
         axios.get("http://127.0.0.1:3000/api/get_all_forms", { withCredentials: true })
