@@ -72,7 +72,7 @@ function DashboardPage() {
 
                 <div className="graph">
                     <div className="ring"></div>
-                    <div className="ring progress" style={{ background: `conic-gradient(black 0% ${forms / 8 * 50}%, transparent ${forms / 8 * 50}% 100%)` }}></div>
+                    <div className="ring progress" style={{ background: `conic-gradient(black 0% ${(forms > 8 ? 8 : forms) / 8 * 50}%, transparent ${(forms > 8 ? 8 : forms) / 8 * 50}% 100%)` }}></div>
                     <div className="ring cover">
                         <span>{forms} / 8</span>
                     </div>
