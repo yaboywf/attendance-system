@@ -62,6 +62,14 @@ function HelpPage() {
                         <i className="fa-solid fa-xmark"></i>
                     </p>
 
+                    <p>My MC / LOA</p>
+                    <p>
+                        <i className="fa-solid fa-check"></i>
+                    </p>
+                    <p>
+                        <i className="fa-solid fa-xmark"></i>
+                    </p>
+
                     <p>Home / Dashboard (Lecturer View)</p>
                     <p>
                         <i className="fa-solid fa-xmark"></i>
@@ -70,7 +78,7 @@ function HelpPage() {
                         <i className="fa-solid fa-check"></i>
                     </p>
 
-                    <p>Approve MC / LOA</p>
+                    <p>User Management</p>
                     <p>
                         <i className="fa-solid fa-xmark"></i>
                     </p>
@@ -78,7 +86,15 @@ function HelpPage() {
                         <i className="fa-solid fa-check"></i>
                     </p>
 
-                    <p>Student Management</p>
+                    <p>Student Attendance</p>
+                    <p>
+                        <i className="fa-solid fa-xmark"></i>
+                    </p>
+                    <p>
+                        <i className="fa-solid fa-check"></i>
+                    </p>
+
+                    <p>Approve MC / LOA</p>
                     <p>
                         <i className="fa-solid fa-xmark"></i>
                     </p>
@@ -106,17 +122,9 @@ function HelpPage() {
                 <p>Understanding your attendance patterns is key to ensuring consistent participation and meeting your educational goals.</p>
                 <ul>
                     <li><strong>Attendance Rate:</strong> View your overall attendance percentage. This will give you a clear picture of your commitment and engagement.</li>
-                    <li><strong>Attendance Trends:</strong> See how your attendance varies over months. This graph can help identify patterns such as frequent absences around specific times or events.</li>
-                    <li><strong>Comparison with Peers:</strong> Allow you to compare your attendance rate with peers. This can help you understand your standing relative to others.</li>
+                    <li><strong>Submitted MC / LOA:</strong> See the number of MC / LOA forms you have submitted. This graph can help gauge whether you have exceeded the allowed limit.</li>
                 </ul>
                 <p>These statistics are tailored specifically to your attendance, providing a personalized view of how well you&apos;re doing and where you can improve.</p>
-                
-                <h3>Pending Tasks</h3>
-                <p>Here are the tasks that need your attention to keep your attendance record up to date:</p>
-                <ul>
-                    <li><strong>MC / LOA Submission:</strong> A reminder to submit your Medical Certificate / Leave of Absence Form for a certain date to avoid consequences.</li>
-                    <li><strong>Leave Request Approval:</strong> Allow students to be informed about a MC / LOA status (accepted / rejected / pending)</li>
-                </ul>
             </section>
 
             <section>
@@ -164,7 +172,6 @@ function HelpPage() {
 
                 <hr />
 
-                <p>You will be informed whether your MC / LOA is approved.</p>
                 <p><strong>Ensure that all information is accurate and up-to-date.</strong></p>
                 <p>Please refer to your organisation&apos;s requirements on submission of Medical Certificates and Leave Of Absence</p>
                 <p>AttendEase is <strong>NOT</strong> responsible for the approval of your attendance. We are also <strong>NOT</strong> liable for any inaccuracies or errors in the data you provide, including but not limited to incorrect personal details or missing information. It is your responsibility to ensure that all required documents and information are submitted correctly and on time for proper processing.</p>
@@ -192,6 +199,124 @@ function HelpPage() {
                     <li>Network related</li>
                     <li>Face Recognition</li>
                 </ol>
+                <p><strong>Note that your device must have Geo-location and Camera capability in order to perform these checks.</strong> Do use a different device if you do not have access to a device with these capabilities.</p>
+            </section>
+
+            <section>
+                <h2>My Attendance</h2>
+
+                <p>Users are able to view their own attendance history</p>
+                <p>Lecturers may state a remark for a particular attendance record</p>
+                <p><strong>Inform and discuss with your lecturer if you are unable to mark your attendance</strong></p>
+                <p><strong>Note that Lecturer accounts are able to override your attendance status if they deem it necessary.</strong></p>
+            </section>
+
+            <section>
+                <h2>My MC / LOA</h2>
+
+                <p>Users are able to view their submitted MC / LOA history</p>
+                <p>All MC / LOA requests are subject to approval</p>
+                <p><strong>Inform and discuss with your lecturer if you are unable to submit a MC / LOA</strong></p>
+                <p><strong>Note that Lecturer accounts are able to reject your MC / LOA if they deem it necessary.</strong></p>
+            </section>
+            </>}
+
+            {user?.account_type.toLowerCase() === "lecturer" && <>
+            <section>    
+                <h2>Home / Dashboard (Lecturer&apos;s View)</h2>
+
+                <h3>Graphs & Statistics</h3>
+                <p>Understanding your attendance patterns is key to ensuring consistent participation and meeting your educational goals.</p>
+                <ul>
+                    <li><strong>Overall Attendance Rate:</strong> View your class&apos;s overall attendance percentage. This will give you a clear picture of your class&apos;s commitment and engagement.</li>
+                </ul>
+                <p>These statistics are tailored specifically to your class, providing a personalized view of how well your class is doing and where they can improve.</p>
+            </section>
+
+            <section>
+                <h2>User Management</h2>
+                <p>You are able to see all <strong>Lecturer</strong> and <strong>Student</strong> accounts</p>
+                <p>A search field is provided to find specific accounts</p>
+
+                <h3>Creating an Account</h3>
+                <ol>
+                    <li>Click on the &quot;Create New Account&quot; button located at the top right of the screen</li>
+                    <li>Fill in all fields</li>
+                    <li>Remember to change to the desired account type if necessary</li>
+                    <li>For the creation of accounts, there are no password requirements, however, it is recommended to create a strong password</li>
+                    <li><strong>Upload a clear profile picture. This will be the reference image used for students to mark their attendance</strong></li>
+                    <li>Click &quot;Create&quot;</li>
+                </ol>
+
+                <h3>Updating an Account</h3>
+                <ol>
+                    <li>Find and click on the account you wish to edit</li>
+                    <li>Update the desired fields</li>
+                    <li>To update the profile picture, click on the existing profile picture and upload a new one</li>
+                    <li>Click &quot;Update&quot;</li>
+                </ol>
+
+                <h3>Deleting an Account</h3>
+                <ol>
+                    <li>Find and click on the account you wish to delete</li>
+                    <li>Click &quot;Delete&quot;</li>
+                </ol>
+                <p><strong>This action is irreversible</strong></p>
+            </section>
+
+            <section>
+                <h2>Student Attendance</h2>
+
+                <p>You are able to view your students&apos; attendance history</p>
+                <p>A search input is available to filter by student name</p>
+
+                <h3>Editing Student&apos;s Attendance</h3>
+                <ol>
+                    <li>Find the student you wish to edit</li>
+                    <li>Click on the Edit Icon located at the most right column of the table</li>
+                    <li>Change the attendance status by selecting the desired option in the dropdown</li>
+                    <li>Add a remark if necessary</li>
+                    <li>Click &quot;Update&quot;</li>
+                </ol>
+
+                <h3>Removing Student&apos;s Attendance</h3>
+                <p>This may be useful when the attendance is invalid, etc</p>
+                <ol>
+                    <li>Find the student you wish to edit</li>
+                    <li>Click on the Edit Icon located at the most right column of the table</li>
+                    <li>Click &quot;Delete&quot;</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Approve MC / LOA</h2>
+                <p>Lecturers are able to approve MC / LOA requests</p>
+                <p>Note that a reason is not required for MC</p>
+                
+                <h3>Viewing MC / LOA Requests</h3>
+                <ul>
+                    <li>A table would be visible to you</li>
+                    <li>It would contain key information such as the type of request (MC / LOA), the student&apos;s name, reason (if any), etc</li>
+                    <li>A search input is available to filter by student name</li>
+                    <li>You can also filter by MC / LOA type, OR pending requests</li>
+                </ul>
+
+                <h3>Approving / Rejecting MC / LOA Requests</h3>
+                <ol>
+                    <li>Find the request you wish to edit</li>
+                    <li>Click on the Edit Icon located at the most right column of the table</li>
+                    <li>The number of approvals and rejections will also be displayed</li>
+                    <li>Change the status by selecting the desired option in the dropdown</li>
+                    <li>Click &quot;Update&quot;</li>
+                </ol>
+                <p>Upon update and reloading of the page, the color of the status would change accordingly</p>
+                <ul>
+                    <li><strong>Green:</strong> Approved</li>
+                    <li><strong>Red:</strong> Rejected</li>
+                    <li><strong>Brown:</strong> Pending</li>
+                </ul>
+
+                <p><strong>Lecturers&apos; ultimately hold the responsibility to approve or reject MC / LOA requests</strong></p>
             </section>
             </>}
 
@@ -224,6 +349,10 @@ function HelpPage() {
                 
                 <h3>Location Permissions</h3>
                 <p>AttendEase requires your device&apos;s location in order to be able to mark your attendance.</p>
+                <p>If you choose to disable it, you can still access AttendEase, but you will not be able to mark your attendance.</p>
+            
+                <h3>Camera Permissions</h3>
+                <p>AttendEase requires your device&apos;s camera in order to be able to mark your attendance.</p>
                 <p>If you choose to disable it, you can still access AttendEase, but you will not be able to mark your attendance.</p>
             </section>
 
