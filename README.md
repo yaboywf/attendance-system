@@ -37,3 +37,4 @@ Each account type will have access to only certain features. This features are s
 ### Backend
 - Express JS
 - Python
+- Firebird SQL
