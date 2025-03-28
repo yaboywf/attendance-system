@@ -15,6 +15,7 @@ import MyAttendance from './javascript/MyAttendance';
 import StudentManagement from './javascript/StudentManagement';
 import PageNotFound from './javascript/PageNotFound';
 import StudentAttendance from './javascript/StudentAttendance';
+import Approval from './javascript/Approval';
 import { ErrorProvider } from "./javascript/ErrorContext";
 
 import './styles/general.scss'
@@ -30,6 +31,7 @@ import './styles/MyAttendance.scss'
 import './styles/StudentManagement.scss'
 import './styles/PageNotFound.scss'
 import './styles/StudentAttendance.scss'
+import './styles/Approval.scss'
 
 const container = document.body;
 const root = createRoot(container);
@@ -51,6 +53,7 @@ root.render(
                     <Route path="/user_management" element={<StudentManagement />} />
                     <Route path="/forget_password/verify/:resetId" element={<ResetPasswordPage />} />
                     <Route path="/student_attendance" element={<StudentAttendance />} />
+                    <Route path="/approve" element={<Approval />} />
 
                     <Route path="*" element={<PageNotFound />} />
                 </Route>

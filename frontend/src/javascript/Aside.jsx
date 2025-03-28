@@ -34,6 +34,8 @@ function Aside({ user }) {
             setPage("usermanagement");
         } else if (path === "/student_attendance") {
             setPage("studentattendance");
+        } else if (path === "/approve") {
+            setPage("approve");
         } else if (path === "/help") {
             setPage("help");
         } else if (path === "/profile") {
@@ -98,6 +100,10 @@ function Aside({ user }) {
                         <button data-active={page === "studentattendance"} onClick={() => goToPage("/student_attendance") }>
                             <i className="fa-solid fa-clipboard-user"></i>
                             Student Attendance
+                        </button>
+                        <button data-active={page === "approve"} onClick={() => goToPage("/approve") }>
+                            <i className="fa-solid fa-file-invoice"></i>
+                            Approve MC / LOA
                         </button>
                     </>}
                     
