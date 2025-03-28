@@ -44,9 +44,10 @@
     border: 1px solid black;
     border-radius: 10px;
     grid-template-columns: 1fr 150px 150px;
-    align-items: center;
 
     p {
+        display: flex;
+        align-items: center;
         padding: 5px 10px;
     }
 
@@ -57,6 +58,7 @@
     p + p:has(i), p:nth-of-type(n+2):nth-of-type(-n+3) {
         border-left: 1px solid black;
         text-align: center;
+        justify-content: center;
     }
 
     p:nth-of-type(-n+3) {
@@ -69,5 +71,18 @@
 
     .fa-check {
         color: darkgreen;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    .help-table {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .help-table {
+        overflow-x: auto;
+        grid-template-columns: 1fr repeat(2, minmax(max-content, 100px));
     }
 }

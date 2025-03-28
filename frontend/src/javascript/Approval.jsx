@@ -92,17 +92,19 @@ function Approval() {
                 <label htmlFor="search">Search:</label>
                 <input type="text" placeholder="Search by username" id="search" autoComplete="off" onChange={filter} />
 
-                <input type="radio" name="approval_toggle" id="all" value={"all"} defaultChecked onChange={filter} />
-                <label htmlFor="all">All</label>
+                <div>
+                    <input type="radio" name="approval_toggle" id="all" value={"all"} defaultChecked onChange={filter} />
+                    <label htmlFor="all">All</label>
 
-                <input type="radio" name="approval_toggle" id="mc" value={"mc"} onChange={filter} />
-                <label htmlFor="mc">MC</label>
+                    <input type="radio" name="approval_toggle" id="mc" value={"mc"} onChange={filter} />
+                    <label htmlFor="mc">MC</label>
 
-                <input type="radio" name="approval_toggle" id="loa" value={"loa"} onChange={filter}  />
-                <label htmlFor="loa">LOA</label>
+                    <input type="radio" name="approval_toggle" id="loa" value={"loa"} onChange={filter}  />
+                    <label htmlFor="loa">LOA</label>
 
-                <input type="checkbox" id="pending" onChange={filter} />
-                <label htmlFor="pending">Pending</label>
+                    <input type="checkbox" id="pending" onChange={filter} />
+                    <label htmlFor="pending">Pending</label>
+                </div>
             </section>
 
             <section>

@@ -134,3 +134,58 @@ footer {
         animation: spin 2s linear infinite;
     }
 }
+
+@media screen and (max-width: 250px) {
+    main *, header *, header, footer * {
+        display: none !important;
+        border: none !important;
+    }
+
+    main {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 1.7;
+
+        &::before {
+            content: "Your device viewport is too small. Please consider using a larger screen. Sorry for the inconvenience.";
+        }
+    }
+}
+
+@media screen and (max-width: 400px) {
+    header {
+        img {
+            width: 60px;
+            height: 60px;
+        }
+
+        h1 {
+            font-size: 26px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+    }
+}
+
+@media screen and (max-width: 300px) {
+    aside h1 {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    main {
+        flex-direction: column;
+    }
+
+    .error-stack {
+        width: 80vw;
+    }
+}

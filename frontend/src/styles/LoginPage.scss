@@ -23,18 +23,6 @@
             h2 {
                 line-height: 1.5;
             }
-
-            button {
-                border: none;
-                outline: none;
-                color: black;
-                background: transparent;
-                cursor: pointer;
-                display: flex;
-                justify-content: start;
-                gap: 5px;
-                border-radius: 10px;
-            }
         }
 
         form {
@@ -51,7 +39,7 @@
                 cursor: pointer;
             }
 
-            button[type='submit'] {
+            button {
                 background: black;
                 color: white;
                 border-radius: 10px;
@@ -60,6 +48,10 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
+            }
+
+            button:last-of-type {
+                margin-top: 0;
             }
 
             input {
@@ -88,6 +80,20 @@
                     margin-right: 10px;
                 }
             }
+        }
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .login-page > section {
+        width: 80vw;
+
+        > div {
+            display: none;
+        }
+
+        form {
+            width: 100%;
         }
     }
 }

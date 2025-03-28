@@ -81,6 +81,7 @@
             cursor: pointer;
             color: black;
             min-height: 200px;
+            text-align: center;
         }
 
         form > div {
@@ -121,6 +122,28 @@
             background: black;
             color: white;
             cursor: pointer;
+        }
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .forms .forms-container form {
+        grid-template-columns: 1fr;
+
+        label[for='upload'], > p, > div, button {
+            grid-column: span 1 !important;
+        }
+
+        div {
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            align-items: center;
+            gap: 5px;
+
+            button {
+                margin: 0 !important;
+            }
         }
     }
 }

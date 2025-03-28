@@ -30,8 +30,6 @@ function Layout() {
 
             setLoading(false)
         });
-
-        // setheaderType("member");
     }, [navigate])
 
     if (loading) {

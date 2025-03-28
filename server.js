@@ -434,8 +434,9 @@ app.post("/api/forget_password", (req, res) => {
 	queryDatabase("SELECT id, hashed_email FROM users;")
 		.then(result => {
 			let requestedUser = null;
+			let userFound = false;
 			result.forEach(user => {
-				if (bcrypt.compareSync(email, user.hashed_email)) {
+				if (!userFound && bcrypt.compareSync(email, user.hashed_email)) {
 					requestedUser = user.id;
 					queryDatabase("INSERT INTO resets VALUES(?, ?, ?)", [resetId, requestedUser, new Date().setHours(new Date().getHours() + 1)])
 					.then(() => {
@@ -457,19 +458,21 @@ If you did not request to reset your password, please ignore this email.
 Kind regards,
 AttendEase
 						`
+						}
+
+						transporter.sendMail(mailOptions, (error) => {
+							if (error) {
+								console.error('Error sending email:', error);
 							}
 
-							transporter.sendMail(mailOptions, (error) => {
-								if (error) {
-									console.error('Error sending email:', error);
-								}
+							return res.json({ status: "success" })
+						});
 
-								return res.json({ status: "success" })
-							});
-						})
-						.catch(err => {
-							return res.json({ status: "fail", message: err })
-						})
+						userFound = true
+					})
+					.catch(err => {
+						return res.json({ status: "fail", message: err })
+					})
 				}
 			})
 		})

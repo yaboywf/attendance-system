@@ -40,7 +40,7 @@ function FormContent({ username, formType }) {
         const formData = new FormData(e.target);
 
         if (new Date(formData.get("end_date")) < new Date(formData.get("start_date"))) return addError("End date cannot be earlier than start date")
-        if (formData.get("reason") && formData.get("reason") === "") return addError("Please enter a reason");
+        if (formData.get("reason") !== null && formData.get("reason") === "") return addError("Please enter a reason");
         if (formData.get("reason") && formData.get("reason").length > 350) return addError("Input too long. Maximum of 350 characters")
         if (!file) return addError("Please upload a file");
         if (file) {
