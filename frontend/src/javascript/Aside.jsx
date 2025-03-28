@@ -66,10 +66,6 @@ function Aside({ user }) {
                         <i className="fa-solid fa-check"></i>
                         Mark Attendance
                     </button>
-                    <button data-active={page === "help"} onClick={() => goToPage("/help") }>
-                        <i className="fa-solid fa-question"></i>
-                        Help
-                    </button>
                     <button data-active={page === "myattendance"} onClick={() => goToPage("/my_attendance") }>
                         <i className="fa-solid fa-clipboard-user"></i>
                         My Attendance
@@ -95,6 +91,10 @@ function Aside({ user }) {
                         </button>
                     </>}
                     
+                    <button data-active={page === "help"} onClick={() => goToPage("/help") }>
+                        <i className="fa-solid fa-question"></i>
+                        Help
+                    </button>
                     <button data-active={page === "profile"} onClick={() => goToPage("/profile") }>
                         <i className="fa-solid fa-user"></i>
                         My Profile

@@ -241,7 +241,7 @@ function StudentManagement() {
                 </label>
                 <input type="search" name="search" id="search" placeholder="Search for a student" autoComplete="off" onInput={(e) => filter(e)} />
 
-                <button onClick={setCreate}>Create New Student</button>
+                <button onClick={setCreate}>Create New Account</button>
             </section>
 
             <section>
