@@ -868,6 +868,17 @@ app.get("/api/get_user_attendance", isAuthenticated, (req, res) => {
 	})
 })
 
+// app.get("/api/unique_attendance", isAuthenticated, (req, res) => {
+// 	queryDatabase("SELECT * FROM attendance WHERE user_id = ?;", [req.user.id])
+// 	.then(result => {
+// 		res.json({ status: "success", data: result })
+// 	})
+// 	.catch(err => {
+// 		console.error(err)
+// 		res.json({ status: "fail" })
+// 	})
+// })
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {
