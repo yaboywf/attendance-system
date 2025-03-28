@@ -335,3 +335,96 @@
         }
     }
 }
+
+@media screen and (max-width: 500px) {
+    .student-management {
+        > section:first-of-type {
+            flex-wrap: wrap;
+
+            button {
+                margin-left: 0;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .user {
+        width: 250px !important;
+        height: 120px !important;
+
+        img {
+            width: 80px !important;
+            height: 80px !important;
+        }
+
+        p:first-of-type {
+            font-size: 16px !important;
+        }
+    }
+
+    .overlay form {
+        width: 80vw !important;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .overlay form {
+        grid-template-columns: 1fr !important;
+        max-height: 80vh;
+        overflow-y: auto;
+
+        label:nth-of-type(5), h2, div, textarea {
+            grid-column: span 1 !important;
+        }
+
+        div:nth-last-of-type(2) {
+            flex-direction: column;
+
+            i {
+                margin-left: 0 !important;
+            }
+        }
+
+        h2 {
+            font-size: 18px !important;
+        }
+
+        label:nth-of-type(5) {
+            text-align: center;
+        }
+
+        input, select {
+            width: 100% !important;
+        }
+    }
+
+    form[data-type=update] label:first-of-type {
+        grid-column: span 1 !important;
+    }
+
+    .overlay > form[data-type=update] div:last-of-type {
+        flex-direction: column;
+        align-items: flex-end !important;
+    }
+}
+
+@media screen and (max-width: 300px) {
+    .user {
+        width: 100% !important;
+        height: 120px !important;
+
+        img {
+            width: 60px !important;
+            height: 60px !important;
+        }
+
+        p:first-of-type {
+            font-size: 16px !important;
+        }
+    }
+
+    .overlay > form h2 {
+        width: 88%;
+    }
+}

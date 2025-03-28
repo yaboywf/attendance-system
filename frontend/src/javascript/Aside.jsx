@@ -7,6 +7,9 @@ function Aside({ user }) {
     const [page, setPage] = useState("dashboard");
     const { addError } = useError()
     const [userImage, setUserImage] = useState(null)
+    const [height, setHeight] = useState(90)
+    const [isMobile, setIsMobile] = useState(false)
+    const [navOpen, setNavOpen] = useState(false)
 
     useEffect(() => {
         axios.get("http://127.0.0.1:3000/api/get_user_image", { withCredentials: true, responseType: 'blob' })
@@ -26,6 +29,24 @@ function Aside({ user }) {
         setPage(new_path);
     }, []);
 
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 700) {
+                setIsMobile(true)
+            } else {
+                setIsMobile(false)
+                setHeight(90)
+            }
+        }
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [])
+
     const logout = () => {
         axios.put("http://127.0.0.1:3000/api/logout", {}, { withCredentials: true })
         .then(resp => {
@@ -43,8 +64,16 @@ function Aside({ user }) {
         window.location.href = page;
     }
 
+    const openBar = () => {
+        if (isMobile) {
+            setNavOpen(!navOpen)
+            setHeight(!navOpen ? (user?.user?.account_type === "student" ? (8*35)+180 : (7*35)+170) : 90);
+        }
+    }
+
     return (
-        user?.user?.username && <aside>
+        user?.user?.username && <aside style={isMobile ? { height: `${height}px` } : {}}>
+            <i className="fa-solid fa-bars" onClick={openBar}></i>
             <section>
                 <div>
                     <img src="attendance-logo.webp" alt="Logo" />

@@ -12,15 +12,17 @@
 
     section {
         display: grid;
-        grid-template-columns: max-content max-content 90px repeat(2, 150px) 1fr;
+        grid-template-columns: max-content max-content 90px repeat(2, 150px) minmax(100px, 1fr);
         border: 1px solid black;
         border-radius: 10px;
+        overflow-x: auto;
 
         p {
             padding: 5px 10px;
             border-bottom: 1px solid black;
             border-right: 1px solid black;
             display: flex;
+            word-break: break-all;
             align-items: center;
         }
 

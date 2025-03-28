@@ -58,7 +58,7 @@ function LoginPage() {
 
         axios.post("http://127.0.0.1:3000/api/forget_password", { email }, { headers: { "Content-Type": "application/json" } })
         .then(resp => {
-            if (resp.data.status === "success") {
+            if (resp.status == 200) {
                 addError("Password reset email sent", "success")
             }
         })
@@ -93,10 +93,6 @@ function LoginPage() {
 
             {formType === "reset" && <section>
                 <div>
-                    <button onClick={() => setFormType("login")}>
-                        <i className="fa-solid fa-arrow-left"></i>
-                        I remember my password now!
-                    </button>
                     <h2>Forgotten Your Password?</h2>
                     <p>Fear not! We got that covered too!</p>
                 </div>
@@ -106,6 +102,7 @@ function LoginPage() {
                     <input type="text" id="email" name="email" autoComplete="email" required placeholder="Enter your email" />
 
                     <button type="submit">Reset Password</button>
+                    <button type="button" onClick={() => setFormType("login")}>I remember my password now!</button>
                 </form>
             </section>}
         </div>

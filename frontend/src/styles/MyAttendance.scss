@@ -12,18 +12,29 @@
 
     section {
         display: grid;
-        grid-template-columns: 60px 150px 100px 150px 1fr;
+        grid-template-columns: 60px 150px 100px 150px minmax(100px, 1fr);
         border: 1px solid black;
         border-radius: 10px;
-        align-items: center;
+        overflow-x: auto;
 
         p {
+            display: flex;
+            align-items: center;
             padding: 5px 10px;
             border-bottom: 1px solid black;
             border-right: 1px solid black;
         }
 
+        > p {
+            font-weight: bold;
+        }
+
+        p:first-of-type{
+            justify-content: center;
+        }
+
         p:last-of-type {
+            word-break: break-all;
             border-right: none;
         }
 

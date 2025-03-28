@@ -5,6 +5,7 @@
     padding: 20px;
     gap: 20px;
     overflow-y: auto;
+    overflow-x: hidden;
 
     h1 {
         font-size: 22px;
@@ -68,6 +69,7 @@
             transform: translate(-50%, -50%);
             animation: spinInner 2s reverse linear infinite;
             pointer-events: none;
+            border-radius: 50%;
         }
 
         .ring2 {
@@ -205,5 +207,103 @@
     }
     100% {
         transform: rotate(360deg);
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    .attendance-marking > section:nth-of-type(2) button {
+        width: 19vw;
+        height: 19vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring1 {
+        width: 22vw;
+        height: 22vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring2 {
+        width: 25vw;
+        height: 25vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring3 {
+        width: 28vw;
+        height: 28vw;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .attendance-marking > section:nth-of-type(2) button {
+        width: 25vw;
+        height: 25vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring1 {
+        width: 28vw;
+        height: 28vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring2 {
+        width: 31vw;
+        height: 31vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring3 {
+        width: 34vw;
+        height: 34vw;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .attendance-marking > section:last-of-type div {
+        width: 80%;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .attendance-marking > section:nth-of-type(2) button {
+        width: 37vw;
+        height: 37vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring1 {
+        width: 40vw;
+        height: 40vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring2 {
+        width: 43vw;
+        height: 43vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring3 {
+        width: 46vw;
+        height: 46vw;
+    }
+}
+
+@media screen and (max-width: 300px) {
+    .attendance-marking > section:last-of-type div {
+        width: 100%;
+    }
+
+    .attendance-marking > section:nth-of-type(2) button {
+        width: 65vw;
+        height: 65vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring1 {
+        width: 70vw;
+        height: 70vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring2 {
+        width: 75vw;
+        height: 75vw;
+    }
+
+    .attendance-marking > section:nth-of-type(2) .ring3 {
+        width: 80vw;
+        height: 80vw;
     }
 }

@@ -3,6 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow-x: hidden;
     overflow-y: auto;
     width: 100%;
 
@@ -19,6 +20,7 @@
         gap: 10px;
         width: 100%;
         padding: 5px 0;
+        flex-wrap: wrap;
 
         input {
             padding: 5px 10px;
@@ -38,15 +40,16 @@
     > section:nth-of-type(2) {
         display: grid;
         grid-template-columns: max-content repeat(3, 1fr) max-content 70px;
-        align-items: center;
         border: 1px solid black;
         border-radius: 10px;
+        overflow-x: auto;
 
         div {
             display: contents;
 
             > p:first-of-type, > p:nth-last-of-type(-n+2) {
                 text-align: center;
+                justify-content: center;
             }
 
             i {
@@ -56,14 +59,18 @@
 
         > p {
             font-weight: bold;
+            white-space: nowrap;
         }
 
         > p:first-of-type, > p:nth-last-of-type(-n+2) {
             text-align: center;
+            justify-content: center;
         }
 
         p {
             padding: 5px 10px;
+            display: flex;
+            align-items: center;
             border-bottom: 1px solid black;
         }
 
@@ -176,5 +183,26 @@
                 justify-content: flex-end;
             }
         }
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .student-attendance > section:last-of-type {
+        grid-template-columns: max-content 1fr 1fr max-content 70px;
+
+        p:nth-of-type(4) {
+            display: none !important;
+        }
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .student-attendance .overlay > form label:nth-of-type(4) {
+        grid-column: span 1;
+    }
+
+    .student-attendance .overlay > form div:last-of-type {
+        flex-direction: column;
+        align-items: flex-end !important;
     }
 }
