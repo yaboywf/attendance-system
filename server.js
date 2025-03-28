@@ -846,6 +846,28 @@ app.put("/api/update_form/:id", isAuthenticated, (req, res) => {
 	})
 })
 
+app.get("/api/get_user_attendance", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT * FROM forms_new WHERE user_id = ?;", [req.user.id])
+	.then(result => {
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+
+			row.start_date = decrypt(row.start_date, encryptionKey, encryptionIv)
+			row.end_date = decrypt(row.end_date, encryptionKey, encryptionIv)
+			row.reason = row.reason === null ? "" : decrypt(row.reason, encryptionKey, encryptionIv)
+			row.form_type = decrypt(row.form_type, encryptionKey, encryptionIv)
+			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+		})
+
+		res.json({ status: "success", data: result })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {

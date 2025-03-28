@@ -1,0 +1,69 @@
+.myforms {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    overflow-y: auto;
+
+    h1 {
+        font-size: 22px;
+    }
+
+    section {
+        display: grid;
+        grid-template-columns: max-content max-content 90px repeat(2, 150px) 1fr;
+        border: 1px solid black;
+        border-radius: 10px;
+
+        p {
+            padding: 5px 10px;
+            border-bottom: 1px solid black;
+            border-right: 1px solid black;
+            display: flex;
+            align-items: center;
+        }
+
+        > p {
+            font-weight: bold;
+        } 
+
+        p:last-of-type {
+            border-right: none;
+        }
+
+        p:first-of-type {
+            text-align: center;
+            justify-content: center;
+        }
+
+        div > p:nth-of-type(2) {
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        div:last-of-type p {
+            border-bottom: none;
+        }
+
+        div {
+            display: contents;
+        }
+
+        p:nth-of-type(3) {
+            text-transform: capitalize;
+
+            &.pending {
+                color: brown;
+            }
+
+            &.approved {
+                color: green;
+            }
+
+            &.rejected {
+                color: red;
+            }
+        }
+    }
+}
