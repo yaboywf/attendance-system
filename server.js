@@ -868,16 +868,22 @@ app.get("/api/get_user_attendance", isAuthenticated, (req, res) => {
 	})
 })
 
-// app.get("/api/unique_attendance", isAuthenticated, (req, res) => {
-// 	queryDatabase("SELECT * FROM attendance WHERE user_id = ?;", [req.user.id])
-// 	.then(result => {
-// 		res.json({ status: "success", data: result })
-// 	})
-// 	.catch(err => {
-// 		console.error(err)
-// 		res.json({ status: "fail" })
-// 	})
-// })
+app.get("/api/get_users_simplified", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT account_type, iv FROM users;")
+	.then(result => {
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+			row.account_type = decrypt(row.account_type, encryptionKey, encryptionIv)
+		})
+
+		res.json({ status: "success", data: result })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
 
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;

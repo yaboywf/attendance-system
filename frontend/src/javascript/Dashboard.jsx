@@ -6,6 +6,7 @@ function DashboardPage() {
     const { user } = useOutletContext();
     const [attendances, setAttendances] = useState({});
     const [forms, setForms] = useState(0);
+    const [overallAttendance, setOverallAttendance] = useState({ "expected": 0, "received": 0});
 
     useEffect(() => {
         const fetchAttendance = async () => {
@@ -53,7 +54,27 @@ function DashboardPage() {
             }
         }
 
-        fetchAttendance()
+        const fetchAttendance1 = async () => {
+            try {
+                let uniqueAttendances = {}
+
+                const totalAttendance = await axios.get("http://127.0.0.1:3000/api/get_all_attendance", { withCredentials: true })
+                if (totalAttendance.data.status === "success") {
+                    totalAttendance.data.data.forEach(attendance => {
+                        const date = attendance.attendance_datetime.split("T")[0]
+                        if (!uniqueAttendances[date]) uniqueAttendances[date] = false
+                    })
+                }
+
+                const users = await axios.get("http://127.0.0.1:3000/api/get_users_simplified", { withCredentials: true })
+                const students = Object.entries(users.data.data).filter(([, value]) => value.account_type.toLowerCase() === "student").length;
+                setOverallAttendance({ "expected": totalAttendance.data.data.length, "received": students * Object.keys(uniqueAttendances).length })
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+        user?.account_type === "lecturer" ? fetchAttendance1() : fetchAttendance()
     }, []);
 
     return (
@@ -61,13 +82,14 @@ function DashboardPage() {
             <h1>Hello, {user?.username || "User"}</h1>
 
             <section>
+                {user?.account_type === "student" && <>
                 <div className="graph">
                     <div className="ring"></div>
                     <div className="ring progress" style={{ background: `conic-gradient(black 0% ${Object.values(attendances).filter(value => value === true).length / Object.keys(attendances).length * 50}%, transparent ${Object.values(attendances).filter(value => value === true).length / Object.keys(attendances).length * 50}% 100%)` }}></div>
                     <div className="ring cover">
-                        <span>{Object.values(attendances).filter(value => value === true).length} / {Object.keys(attendances).length}</span>
+                        <span>{Object.values(attendances).filter(value => value === true).length / Object.keys(attendances).length * 100}%</span>
                     </div>
-                    <p>Overall Attendance Rate</p>
+                    <p>Your Attendance Rate</p>
                 </div>
 
                 <div className="graph">
@@ -79,6 +101,16 @@ function DashboardPage() {
 
                     <p>Forms Submitted</p>
                 </div>
+                </>}
+
+                {user?.account_type !== "student" && <div className="graph">
+                    <div className="ring"></div>
+                    <div className="ring progress" style={{ background: `conic-gradient(black 0% ${overallAttendance.expected / overallAttendance.received * 50}%, transparent ${overallAttendance.expected / overallAttendance.received * 50}% 100%)` }}></div>
+                    <div className="ring cover">
+                        <span>{overallAttendance.expected / overallAttendance.received * 100}%</span>
+                    </div>
+                    <p>Overall Attendance Rate</p>
+                </div>}
             </section>
         </div>
     );

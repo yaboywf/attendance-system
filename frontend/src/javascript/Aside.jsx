@@ -52,11 +52,12 @@ function Aside({ user }) {
                 </div>
                 
                 <div>
-                    {user?.user?.account_type?.toLowerCase() === "student" && <>
                     <button data-active={page === "dashboard"} onClick={() => goToPage("/dashboard") }>
                         <i className="fa-solid fa-house"></i>
                         Home
                     </button>
+                    
+                    {user?.user?.account_type?.toLowerCase() === "student" && <>
                     <button data-active={page === "forms"} onClick={() => goToPage("/forms") }>
                         <i className="fa-solid fa-file"></i>
                         Submit MC / LOA
