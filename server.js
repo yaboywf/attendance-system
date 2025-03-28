@@ -787,8 +787,8 @@ app.delete("/api/delete_attendance/:id", isAuthenticated, (req, res) => {
 	})
 })
 
-app.get("/api/get_all_forms", (req, res) => {
-	queryDatabase("SELECT * FROM forms_new;")
+app.get("/api/get_all_forms", isAuthenticated, (req, res) => {
+	queryDatabase("SELECT forms_new.*, users.username FROM forms_new JOIN users ON users.id = forms_new.user_id;")
 	.then(result => {
 		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
 		result.forEach(row => {

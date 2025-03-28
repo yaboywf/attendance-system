@@ -37,7 +37,7 @@
 
     > section:nth-of-type(2) {
         display: grid;
-        grid-template-columns: max-content 1fr 1fr 1fr max-content 70px;
+        grid-template-columns: max-content repeat(3, 1fr) max-content 70px;
         align-items: center;
         border: 1px solid black;
         border-radius: 10px;

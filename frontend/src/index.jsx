@@ -31,6 +31,7 @@ import './styles/MyAttendance.scss'
 import './styles/StudentManagement.scss'
 import './styles/PageNotFound.scss'
 import './styles/StudentAttendance.scss'
+import './styles/Approval.scss'
 
 const container = document.body;
 const root = createRoot(container);

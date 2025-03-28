@@ -20,19 +20,67 @@ function Approval() {
         })
     }, [])
 
+    const filter = () => {
+        const search = document.getElementById("search").value.toLowerCase();
+        const selectedRadio = document.querySelector('input[name="approval_toggle"]:checked');
+        const pending = document.getElementById("pending").checked;
+
+        document.querySelectorAll(".row").forEach(form => {
+            const username = form.querySelector("p:nth-child(2)").textContent.toLowerCase();
+            const type = form.querySelector("p:nth-child(3)").textContent.toLowerCase();
+            const status = form.querySelector("p:nth-child(4)").textContent.toLowerCase();
+
+            if (username.includes(search) && (selectedRadio.value === "all" || type === selectedRadio.value) && (pending ? status === "pending" : false)) {
+                form.style.display = "contents";
+            } else {
+                form.style.display = "none";
+            }
+        });
+    }
+
     return (
-        <div>
+        <div className="approval">
             <h1>Approve MC / LOA</h1>
 
             <section>
+                <label htmlFor="search">Search:</label>
+                <input type="text" placeholder="Search by username" id="search" autoComplete="off" onChange={filter} />
+
+                <input type="radio" name="approval_toggle" id="all" value={"all"} defaultChecked onChange={filter} />
+                <label htmlFor="all">All</label>
+
+                <input type="radio" name="approval_toggle" id="mc" value={"mc"} onChange={filter} />
+                <label htmlFor="mc">MC</label>
+
+                <input type="radio" name="approval_toggle" id="loa" value={"loa"} onChange={filter}  />
+                <label htmlFor="loa">LOA</label>
+
+                <input type="checkbox" id="pending" onChange={filter} defaultChecked />
+                <label htmlFor="pending">Pending</label>
+            </section>
+
+            <section>
+                <p>No.</p>
+                <p>Username</p>
+                <p>Type</p>
+                <p>Status</p>
+                <p>From</p>
+                <p>To</p>
+                <p>Reason</p>
+                <p>Edit</p>
+
                 {forms.map((form, index) => (
-                    <div key={form.id}>
+                    <div className="row" key={form.id}>
                         <p>{index + 1}</p>
+                        <p>{form.username}</p>
                         <p>{form.form_type}</p>
-                        <p>{form.status}</p>
-                        <p>{form.start_date}</p>
-                        <p>{form.reason}</p>
-                        <p>{form.end_date}</p>
+                        <p className={form.status}>{form.status}</p>
+                        <p>{form.start_date.replace("T", " ")}</p>
+                        <p>{form.end_date.replace("T", " ")}</p>
+                        <p>{form.reason || "-"}</p>
+                        <p>
+                            <i className="fa-solid fa-edit"></i>
+                        </p>
                     </div>
                 ))}
             </section>
