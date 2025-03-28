@@ -5,11 +5,13 @@ import { useError } from "./ErrorContext";
 function Approval() {
     const { addError } = useError();
     const [forms, setForms] = useState([]);
+    const [overlay, setOverlay] = useState(false);
+    const [selectedForm, setSelectedForm] = useState(null);
+    const [overallAttendance, setOverallAttendance] = useState({ "pending": 0, "approved": 0, "rejected": 0 });
 
     useEffect(() => {
         axios.get("http://127.0.0.1:3000/api/get_all_forms", { withCredentials: true })
         .then(resp => {
-            console.log(resp.data)
             if (resp.data.status === "success") {
                 setForms(resp.data.data)
             }
@@ -30,12 +32,50 @@ function Approval() {
             const type = form.querySelector("p:nth-child(3)").textContent.toLowerCase();
             const status = form.querySelector("p:nth-child(4)").textContent.toLowerCase();
 
-            if (username.includes(search) && (selectedRadio.value === "all" || type === selectedRadio.value) && (pending ? status === "pending" : false)) {
+            if (username.includes(search) && (selectedRadio.value === "all" || type === selectedRadio.value) && (pending ? status === "pending" : true)) {
                 form.style.display = "contents";
             } else {
                 form.style.display = "none";
             }
         });
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        axios.put(`http://127.0.0.1:3000/api/update_form/${selectedForm.id}`, { status: e.target.status.value, iv: selectedForm.iv }, { headers: { "Content-Type": "application/json" }, withCredentials: true })
+        .then(resp => {
+            if (resp.data.status === "success") {
+                addError("Form Updated Successfully. Reload to see changes.", "success");
+                setOverlay(false);
+            }
+        })
+        .catch(err => {
+            addError("Something went wrong when trying to update form");
+            console.error(err);
+        })
+    }
+
+    const openOverlay = (form) => {
+        setSelectedForm(form);
+        setOverlay(true);
+        setOverallAttendance({ "pending": 0, "approved": 0, "rejected": 0 });
+
+        axios.get(`http://127.0.0.1:3000/api/get_forms/${form.user_id}`, { withCredentials: true })
+        .then(resp => {
+            if (resp.data.status === "success") {
+                let overall = { "pending": 0, "approved": 0, "rejected": 0 };
+                resp.data.data.forEach(form => {
+                    overall[form.status.toLowerCase()] += 1;
+                })
+
+                setOverallAttendance(overall);
+            }
+        })
+        .catch(err => {
+            addError("Something went wrong when trying to fetch overall attendance");
+            console.error(err);
+        })
     }
 
     return (
@@ -55,7 +95,7 @@ function Approval() {
                 <input type="radio" name="approval_toggle" id="loa" value={"loa"} onChange={filter}  />
                 <label htmlFor="loa">LOA</label>
 
-                <input type="checkbox" id="pending" onChange={filter} defaultChecked />
+                <input type="checkbox" id="pending" onChange={filter} />
                 <label htmlFor="pending">Pending</label>
             </section>
 
@@ -79,11 +119,45 @@ function Approval() {
                         <p>{form.end_date.replace("T", " ")}</p>
                         <p>{form.reason || "-"}</p>
                         <p>
-                            <i className="fa-solid fa-edit"></i>
+                            <i className="fa-solid fa-edit" onClick={() => openOverlay(form)}></i>
                         </p>
                     </div>
                 ))}
             </section>
+
+            {overlay && <div className="overlay">
+                <form onSubmit={handleSubmit} noValidate>
+                    <i className="fa-solid fa-xmark" onClick={() => { setOverlay(false); setSelectedForm(null); }}></i>
+                    <h2>Update Form</h2>
+
+                    <p>Username:</p>
+                    <span>{selectedForm?.username}</span>
+
+                    <p>Type:</p>
+                    <span>{selectedForm?.form_type}</span>
+
+                    <p>From:</p>
+                    <span>{selectedForm?.start_date.replace("T", " ")}</span>
+
+                    <p>To:</p>
+                    <span>{selectedForm?.end_date.replace("T", " ")}</span>
+
+                    <p>Reason:</p>
+                    <span>{selectedForm?.reason || "-"}</span>
+
+                    <p>Applied {selectedForm.form_type.toUpperCase()}:</p>
+                    <span>{overallAttendance.pending} Pending; {overallAttendance.approved} Approved; {overallAttendance.rejected} Rejected</span>
+
+                    <p>Status:</p>
+                    <select name="status" id="status" defaultValue={selectedForm?.status}>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+
+                    <button type="submit">Update</button>
+                </form>
+            </div>}
         </div>
     )
 }

@@ -809,6 +809,43 @@ app.get("/api/get_all_forms", isAuthenticated, (req, res) => {
 	})
 })
 
+app.get("/api/get_forms/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+
+	queryDatabase("SELECT status, iv FROM forms_new WHERE user_id = ?", [id])
+	.then(result => {
+		const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+		result.forEach(row => {
+			const encryptionIv = Buffer.from(row.iv, "hex")
+
+			row.status = decrypt(row.status, encryptionKey, encryptionIv)
+		})
+
+		res.json({ status: "success", data: result })
+	})
+	.catch(err => {
+		console.error(err)
+		res.json({ status: "fail" })
+	})
+})
+
+app.put("/api/update_form/:id", isAuthenticated, (req, res) => {
+	const { id } = req.params
+	const { status, iv } = req.body
+
+	const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+	const encryptionIv = Buffer.from(iv, "hex")
+	const encryptedStatus = encrypt(status, encryptionKey, encryptionIv)
+
+	queryDatabase("UPDATE forms_new SET status = ? WHERE id = ?", [encryptedStatus, id])
+	.then(() => {
+		res.json({ status: "success" })
+	})
+	.catch(err => {
+		console.error(err)
+	})
+})
+
 if (process.env.NODE_ENV !== "test") {
 	const PORT = process.env.PORT || 3000;
 	app.listen(PORT, () => {
